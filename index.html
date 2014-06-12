@@ -14,6 +14,21 @@
         font-weight: normal;
       }
       .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      /* Two-column layout */
+      .left-column {
+        color: #777;
+        width: 20%;
+        height: 92%;
+        float: left;
+      }
+        .left-column h2:last-of-type, .left-column h3:last-child {
+          color: #000;
+        }
+      .right-column {
+        width: 75%;
+        float: right;
+        padding-top: 1em;
+      }
     </style>
   </head>
   <body>
@@ -62,6 +77,68 @@ http://en.wikipedia.org/wiki/Command_pattern
 --
 
 - client
+
+---
+
+.left-column[
+  ## Four terms
+  ### - command
+]
+.right-column[
+
+# command
+
+A command object has a receiver object and invokes a method of the receiver in a way that is specific to that receiver's class. 
+
+]
+
+---
+
+.left-column[
+  ## Four terms
+  ### - command
+  ### - receiver
+]
+.right-column[
+
+# receiver
+
+The receiver may be called the target. It does the work.
+
+]
+
+---
+
+.left-column[
+  ## Four terms
+  ### - command
+  ### - receiver
+  ### - invoker
+]
+.right-column[
+
+# invoker
+
+The invoker invokes the command and optionally does bookkeeping about the command execution.
+
+]
+
+---
+
+.left-column[
+  ## Four terms
+  ### - command
+  ### - receiver
+  ### - invoker
+  ### - client
+]
+.right-column[
+
+# client
+
+The client contains the decision making about which commands to execute at which points.
+
+]
 
     </textarea>
     <script src="http://gnab.github.io/remark/downloads/remark-latest.min.js" type="text/javascript">
