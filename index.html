@@ -29,6 +29,68 @@
         float: right;
         padding-top: 1em;
       }
+      .bigfont {
+        font-size: 2em;
+      }
+
+      /* from http://nicolasgallagher.com/pure-css-speech-bubbles/demo/ */
+      .example-obtuse {
+        position:relative;
+        padding:15px 30px;
+        margin:0;
+        color:#000;
+        background:#f3961c; /* default background for browsers without gradient support */
+        /* css3 */
+        background:-webkit-gradient(linear, 0 0, 0 100%, from(#f9d835), to(#f3961c));
+        background:-moz-linear-gradient(#f9d835, #f3961c);
+        background:-o-linear-gradient(#f9d835, #f3961c);
+        background:linear-gradient(#f9d835, #f3961c);
+        /* Using longhand to avoid inconsistencies between Safari 4 and Chrome 4 */
+        -webkit-border-top-left-radius:25px 50px;
+        -webkit-border-top-right-radius:25px 50px;
+        -webkit-border-bottom-right-radius:25px 50px;
+        -webkit-border-bottom-left-radius:25px 50px;
+        -moz-border-radius:25px / 50px;
+        border-radius:25px / 50px;
+      }
+
+      /* display of quote author (alternatively use a class on the element following the blockquote) */
+      .example-obtuse + p {margin:10px 150px 2em 0; text-align:right; font-style:italic;}
+
+      /* creates the larger triangle */
+      .example-obtuse:before {
+        content:"";
+        position:absolute;
+        bottom:-30px;
+        right:80px;
+        border-width:0 0 30px 50px;
+        border-style:solid;
+        border-color:transparent #f3961c;
+        /* reduce the damage in FF3.0 */
+        display:block;
+        width:0;
+      }
+
+      /* creates the smaller triangle */
+      .example-obtuse:after {
+        content:"";
+        position:absolute;
+        bottom:-30px;
+        right:110px;
+        border-width:0 0 30px 20px;
+        border-style:solid;
+        border-color:transparent #fff;
+        /* reduce the damage in FF3.0 */
+        display:block;
+        width:0;
+      }
+
+      blockquote {
+          margin: 1em 0px;
+      }
+
+
+
     </style>
   </head>
   <body>
@@ -50,33 +112,81 @@ http://greptilian.com
 
 ---
 
+class: bigfont
+
+<!-- FIXME: title is too far right -->
 # Agenda
 
 1. Introduction
-2. Deep-dive
-3. ...
+1. Motivation
+1. A use case
+1. Deep-dive
+1. Come for air
+1. Running code
 
 ---
 
 # Introduction
 
-http://en.wikipedia.org/wiki/Command_pattern
+What is a design pattern?
+
+<img src="images/gof.png" width="300"/>
+<img src="images/hfdp.jpg" width="300"/>
+
+---
+
+# Motivation
+
+<!-- <blockquote class="rectangle-speech-border"> -->
+<img src="images/in-command-now.jpg" width="600"/>
+<blockquote class="example-obtuse">
+  <p style="font-size:1.7em;">You are in command now, Admiral Piett.</p>
+</blockquote>
+
+---
+
+class: bigfont
+
+# A use case: Find the droids
+
+<img src="images/look-sir-droids.jpg" width="400"/>
 
 --
+
+- look around for droids
+
+--
+
+- check identification
+
+--
+
+- big promotion
+
+---
+# Our first command: CheckIdCommand
+
+<img src="images/not-the-droids.png" width="600"/>
+
+```java
+public class CheckIdCommand implements Command {
+...
+```
+
+---
+
+class: bigfont
+
+# Definining the command pattern
 
 - command
-
---
-
 - receiver
-
---
-
 - invoker
+- client
 
 --
 
-- client
+An example from http://en.wikipedia.org/wiki/Command_pattern
 
 ---
 
@@ -212,9 +322,23 @@ public class PressSwitch {
 
 ---
 
+# Back on schedule
+
+<blockquote class="example-obtuse">
+  <p style="font-size:1.4em;">You may dispense with the pleasantries, Commander. I'm here to put you back on schedule.</p>
+</blockquote>
+
+<img src="images/schedule.jpg" width="600"/>
+
+---
+
 # More on the command pattern
 
-http://gameprogrammingpatterns.com/command.html
+- https://github.com/bethrobson/Head-First-Design-Patterns/tree/master/src/headfirst/designpatterns/command (Java 8!)
+- http://gameprogrammingpatterns.com/command.html
+- http://www.vincehuston.org/dp/command.html
+  - http://www.vincehuston.org/dp/CommandDemosJava
+- http://iqss.github.io/javaone2014-bof5619 (sample code from this talk)
 
     </textarea>
     <script src="http://gnab.github.io/remark/downloads/remark-latest.min.js" type="text/javascript">
