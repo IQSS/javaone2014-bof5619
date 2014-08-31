@@ -1,0 +1,53 @@
+@startuml
+
+' definitions
+' -----------
+
+' package "com.greptilian.javaone2014bof5619.starwars"
+class StormTrooper
+class Ship
+interface Command
+class Suspect
+class CheckIdCommand
+class CheckShipCommand
+class Client
+' end package
+
+' content
+' -------
+
+' Command:
+Command : void execute()
+
+' CheckShipCommand:
+Command <|.. CheckShipCommand
+CheckShipCommand --> "1" Ship
+CheckShipCommand : void execute()
+
+' CheckIdCommand:
+Command <|.. CheckIdCommand
+CheckIdCommand --> "1" Suspect
+CheckIdCommand : void execute()
+
+
+' Client:
+Client : void main(String)
+
+' Suspect:
+Suspect : String toString()
+Suspect : String getName()
+Suspect : void setName(String)
+Suspect : String getId()
+Suspect : void setId(String)
+
+
+' StormTrooper:
+StormTrooper --> "1" Command
+StormTrooper : void setCommand(Command)
+StormTrooper : void execute()
+
+' Ship:
+Ship : String getName()
+Ship : List getSuspects()
+
+@enduml
