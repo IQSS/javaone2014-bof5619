@@ -32,6 +32,9 @@
       .bigfont {
         font-size: 2em;
       }
+      .regularfont {
+        font-size: .7em;
+      }
 
       /* from http://nicolasgallagher.com/pure-css-speech-bubbles/demo/ */
       .example-obtuse {
@@ -100,42 +103,113 @@ class: bottom
 
 # BOF5619 - Lean Beans (are made of this): Command pattern vs. MVC
 
-Michael Bar-Sinai ([@michbarsinai](https://twitter.com/michbarsinai))  
-http://www.iq.harvard.edu/people/michael-bar-sinai  
-http://mbarsinai.com/blog
-
 Philip Durbin ([@philipdurbin](https://twitter.com/philipdurbin))  
 http://www.iq.harvard.edu/people/philip-durbin  
 http://greptilian.com
 
 .right[[![IQSS logo](images/iqss-logo.png)](http://www.iq.harvard.edu)]
 
+???
+
+Hello! Thanks for coming. Let's get going.
+
+This is Birds Of A Feather 5619, "Lean Beans (are made of this): Command pattern vs. MVC."
+
+My name is Philip Durbin and I'm developer at the Institute for Quantitative Social Science at Harvard University. That's IQSS on GitHub.
+
 ---
 
 class: bigfont
 
-<!-- FIXME: title is too far right -->
 # Agenda
 
-1. Introduction
-1. Motivation
-1. A use case
-1. Deep-dive
-1. Come for air
-1. Running code
+1. Why
+1. What
+1. How
+
+.regularfont[
+Slide and code:
+
+https://github.com/IQSS/javaone2014-bof5619
+]
+
+???
+
+The agenda for this talk is pretty simple:
+
+- Why
+- What
+- How
+- Whither
+
+I'm going to talk a bit about how my team came to adopt the command pattern before diving down into what it is... with plenty of code samples.
+
+I've been to a few talks by Arun Gupta and he always says, "Code is king," and I just love that. So the code is coming. Relax.
+
+And... this entire talk, including the code, has already been posted to GitHub.
+
+You should be able to find it under github.com/IQSS
+
+You're welcome to open issues on the GitHub repo... and right now, during this talk, please feel free to raise your hand and stop me.
 
 ---
 
-# Introduction
+# Dataverse
 
-What is a design pattern?
+Dataverse is an open source web application for sharing, citing, analyzing, and preserving research data.
 
-<img src="images/gof.png" width="300"/>
-<img src="images/hfdp.jpg" width="300"/>
+Began life (under the name Dataverse) as a Java EE 5 application in 2006.
+
+
+Dataverse 4.0 ( https://github.com/IQSS/dataverse ) is a complete rewrite:
+
+- more flexible architecture
+- focus on usability
+- ... much more! (See http://dataverse.org for details.)
+
+???
+
+So! Why... why am I talking about the command pattern at all?
+
+You see, I work on an open source project called Dataverse that began life in 2006 (under that name anyway) as a Java EE 5 application.
+
+About a year ago, shortly after last year's JavaOne, we started talking about the possibility of re-writing Dataverse from the ground up.
+
+Our users were finding the application very useful but they wanted more flexibility in a variety of areas.
 
 ---
 
-# Motivation
+# Dataverse 4.0: more granular permissions 
+
+Command pattern examples:
+
+- CreateDatasetCommand
+- PublishDatasetCommand
+- DeleteDataFileCommand
+- ...
+
+Idea to use command pattern came from one of our architects:
+
+Michael Bar-Sinai ([@michbarsinai](https://twitter.com/michbarsinai))  
+http://www.iq.harvard.edu/people/michael-bar-sinai  
+http://mbarsinai.com/blog
+
+???
+
+One of the main areas where we wanted more flexibility was in our system for permissions.
+
+A very bright colleague of mine, Michael Bar-Sinai, came up with the initial design, which is based on the command pattern.
+
+Here we see a few example commands:
+
+- CreateDatasetCommand
+- PublishDatasetCommand
+- DeleteDataFileCommand
+- and so on
+
+---
+
+# The Command Pattern
 
 <!-- <blockquote class="rectangle-speech-border"> -->
 <img src="images/in-command-now.jpg" width="600"/>
@@ -143,28 +217,53 @@ What is a design pattern?
   <p style="font-size:1.7em;">You are in command now, Admiral Piett.</p>
 </blockquote>
 
+???
+
+Lemme back up minute though.
+
+"Command pattern" is in the title of this talk so I know you've *heard* of it, but how many people here have actually used the command pattern?
+
+---
+
+# Learning the Command Pattern
+
+<img src="images/gof.png" width="300"/>
+<img src="images/hfdp.jpg" width="300"/>
+
+???
+
+I'm relatively new to the command pattern myself. My first introduction to it was working with the code that Michael put in our app but I found it very useful to read through the command pattern chapter in Head First Design Patterns. That's this book on the right.
+
+In that book you'll see the client is a customer at a diner, who makes an order, which is the command, that goes to the waitress, who is the "invoker", who gives it to the cook, who is the "receiver". 
+
+Then they talk about a remote control with buttons you can program, all using the command pattern. It's very well done. It's a great book.
+
+And of course, you can't talk about a design pattern without mentioning the Gang Of Four book here on the left. I haven't read it but I've heard good things.
+
 ---
 
 class: bigfont
 
-# A use case: Find the droids
+# Giving Commands
 
 <img src="images/look-sir-droids.jpg" width="400"/>
 
---
+1. stop people with droids
+1. check identification
 
-- look around for droids
+???
 
---
+I don't wanna talk about cooks and waitresses so I'm going to give you some examples from Star Wars.
 
-- check identification
+Let's say you're Darth Vader and you've got an army of troops. You're forever giving these guys commands.
 
---
+So you start out by telling them:
 
-- big promotion
+- look around for some droids and
+- for the people that are with the droids... check their identification
 
 ---
-# Our first command: CheckIdCommand
+# CheckIdCommand
 
 <img src="images/not-the-droids.png" width="600"/>
 
@@ -172,6 +271,14 @@ class: bigfont
 public class CheckIdCommand implements Command {
 ...
 ```
+
+???
+
+So! You've got this CheckIdCommand.
+
+The command pattern is all about encapsulating a request. Who's making the request? The invoker.
+
+And if we're encapsulating the request, what are we encapsulating with it exactly?
 
 ---
 
