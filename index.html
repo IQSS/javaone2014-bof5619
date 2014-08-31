@@ -263,22 +263,108 @@ So you start out by telling them:
 - for the people that are with the droids... check their identification
 
 ---
-# CheckIdCommand
+
+# CheckIdCommand and supertype
 
 <img src="images/not-the-droids.png" width="600"/>
 
 ```java
 public class CheckIdCommand implements Command {
-...
+    // coming soon!
+}
+
+public interface Command {
+
+    void execute();
+
+}
+
 ```
 
 ???
 
 So! You've got this CheckIdCommand.
 
-The command pattern is all about encapsulating a request. Who's making the request? The invoker.
+The first thing to notice is that the individual commands always implements the command interface.
 
-And if we're encapsulating the request, what are we encapsulating with it exactly?
+(Technically, it doesn't have to be a Java interface; it can be an abstract class.)
+
+Notice that the command interface is very simple. It only requires that implement a single command, which is often called `execute()`.
+
+---
+
+# Complete CheckIdCommand
+
+<img src="images/not-the-droids.png" width="200"/>
+
+```java
+public class CheckIdCommand implements Command {
+
+    private Suspect suspect;
+
+    public CheckIdCommand(Suspect suspect) {
+        this.suspect = suspect;
+    }
+
+    public void execute() {
+        try {
+            System.out.println("Id for " + suspect + " is " + suspect.getId());
+        } catch (Exception ex) {
+            System.out.println("Move along, move along.");
+        }
+    }
+
+}
+
+```
+
+???
+
+Here's the full `CheckIdCommand` example.
+
+Notice that a suspect gets passed into the constructor. In this case the suspect is Obiwan Kenobe so there's the danger of a JediMindTrick exception being thrown.
+
+Perhaps unwisely, if any exception is thrown at all, the stormtrooper simply says, "Move along, move along."
+
+That's all contained in the execute() method, which again is required by the command interface.
+
+---
+
+# The Client
+
+<img src="images/not-the-droids.png" width="200"/>
+
+
+```java
+System.out.println("# Mos Eisley checkpoint");
+Suspect obiwan = new Suspect("Obiwan", Suspect.Type.JEDI);
+Command checkIdCommand = new CheckIdCommand(obiwan);
+StormTrooper stormTrooper = new StormTrooper(checkIdCommand);
+stormTrooper.execute(); // Move along, move along.
+
+System.out.println("# Death Star hangar");
+Ship falcon = new Ship("Millenium Falcon", Ship.Type.SMUGGLING);
+Command checkShipCommand = new CheckShipCommand(falcon);
+stormTrooper.setCommand(checkShipCommand);
+stormTrooper.execute(); // No one on board.
+```
+
+- commands are bound to objects (suspects, ships)
+- same stormtrooper given a new command with setCommand()
+
+???
+
+Here we finally get the whole picture.
+
+In both cases, the stormtrooper simply calls execute() to execute the command, no matter if it's the CheckIdCommand or the CheckShipCommand.
+
+---
+
+class: bigfont
+
+# Official definition from the Gang of Four
+
+The Command Pattern encapsulates a request as an object, thereby letting you parameterize other objects with different requests, queue or log requests, and support undoable operations.
 
 ---
 
