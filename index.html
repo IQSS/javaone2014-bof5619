@@ -262,6 +262,8 @@ So you start out by telling them:
 - look around for some droids and
 - for the people that are with the droids... check their identification
 
+Should be a piece cake. How hard could this be?
+
 ---
 
 # CheckIdCommand and supertype
@@ -287,9 +289,11 @@ So! You've got this CheckIdCommand.
 
 The first thing to notice is that the individual commands always implements the command interface.
 
-(Technically, it doesn't have to be a Java interface; it can be an abstract class.)
+(Technically, you don't have to use the `interface` keyword; It can be an abstract class.)
 
-Notice that the command interface is very simple. It only requires that implement a single command, which is often called `execute()`.
+Notice that the command interface is very simple. It only requires that you implement a single method, which is often called `execute()`.
+
+That's some of the power of the dark side... er, power of the command pattern... that no matter what the command is called, the complexity is hidden behind a consistently named method such as execute.
 
 ---
 
@@ -308,7 +312,7 @@ public class CheckIdCommand implements Command {
 
     public void execute() {
         try {
-            System.out.println("Id for " + suspect + " is " + suspect.getId());
+            System.out.println("Id for " + suspect.getName() + " is " + suspect.getId());
         } catch (Exception ex) {
             System.out.println("Move along, move along.");
         }
@@ -322,11 +326,11 @@ public class CheckIdCommand implements Command {
 
 Here's the full `CheckIdCommand` example.
 
-Notice that a suspect gets passed into the constructor. In this case the suspect is Obiwan Kenobe so there's the danger of a JediMindTrick exception being thrown.
+Notice that a suspect gets passed into the constructor of the command. In this case the suspect is Obiwan Kenobe so there's the danger of a JediMindTrick exception being thrown.
 
 Perhaps unwisely, if any exception is thrown at all, the stormtrooper simply says, "Move along, move along."
 
-That's all contained in the execute() method, which again is required by the command interface.
+That's all contained in the execute() method, which again is required by the command interface. All commands have an execute() method.
 
 ---
 
@@ -334,29 +338,159 @@ That's all contained in the execute() method, which again is required by the com
 
 <img src="images/not-the-droids.png" width="200"/>
 
+```java
+System.out.println("# Mos Eisley checkpoint");
+Suspect obiwan = new Suspect("Obiwan", Suspect.Type.JEDI); // receiver
+Command checkIdCommand = new CheckIdCommand(obiwan);
+StormTrooper stormTrooper = new StormTrooper(checkIdCommand); // invoker
+stormTrooper.execute(); // Move along, move along.
+```
+
+- command bound to receiver
+- invoker is given a command to execute
+
+???
+
+In the command pattern the client is the piece ties it everthing together. We'll see all of the components in play.
+
+Before we instatiate our CheckIdCommand, we need to decide which Suspect we're going to bind it to. Whose id are we going to check? A Jawa? A Tuskan Raider? No... we've got Obiwan here, so he's what gets passed in when we create the command. Obiwan is the "receiver" of the command.
+
+And who's going to execute the CheckIdCommand? The stormtrooper. We've got a constructor that allows us to instantiate the stormtrooper with the command we want.
+
+Of course, when we call execute that stupid JediMindTrick exception gets thrown so we just say, "We don't need to see his identification." 
+
+---
+
+# One Invoker, Two Commands
+
+<img src="images/not-the-droids.png" width="200"/>
 
 ```java
 System.out.println("# Mos Eisley checkpoint");
-Suspect obiwan = new Suspect("Obiwan", Suspect.Type.JEDI);
+Suspect obiwan = new Suspect("Obiwan", Suspect.Type.JEDI); // receiver
 Command checkIdCommand = new CheckIdCommand(obiwan);
 StormTrooper stormTrooper = new StormTrooper(checkIdCommand);
 stormTrooper.execute(); // Move along, move along.
 
 System.out.println("# Death Star hangar");
-Ship falcon = new Ship("Millenium Falcon", Ship.Type.SMUGGLING);
+Ship falcon = new Ship("Millenium Falcon", Ship.Type.SMUGGLING); // receiver
 Command checkShipCommand = new CheckShipCommand(falcon);
-stormTrooper.setCommand(checkShipCommand);
+stormTrooper.setCommand(checkShipCommand); // same invoker, new command
 stormTrooper.execute(); // No one on board.
 ```
 
-- commands are bound to objects (suspects, ships)
-- same stormtrooper given a new command with setCommand()
+- same stormtrooper given different commands
 
-???
+---
 
-Here we finally get the whole picture.
+class: bigfont
 
-In both cases, the stormtrooper simply calls execute() to execute the command, no matter if it's the CheckIdCommand or the CheckShipCommand.
+# Star Wars Class Diagram
+
+<img src="images/starwars-classes.png" width="320" align="right"/>
+
+**Client**: Client
+
+**Concrete Commands**: CheckIdCommand, CheckShipCommand
+
+**Receiver**: Suspect, Ship
+
+**Invoker**: StormTrooper
+
+---
+
+# Stormtrooper/Invoker
+
+```java
+public class StormTrooper {
+
+    private Command command;
+
+    public StormTrooper(Command command) {
+        this.command = command;
+    }
+
+    public void setCommand(Command command) {
+        this.command = command;
+    }
+
+    public void execute() {
+        command.execute();
+    }
+
+}
+
+```
+---
+
+# Suspect/Receiver
+
+```java
+public class Suspect {
+
+    private String name;
+    private Type type;
+    private String id;
+
+    public Suspect(String name, Type type) {
+        this.name = name;
+        this.type = type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getId() {
+        if (type.equals(Type.JEDI)) {
+            throw new RuntimeException("Jedi mind trick!");
+        } else {
+            return id;
+        }
+    }
+
+    public enum Type { JEDI, OTHER }
+}
+```
+
+---
+
+# Another Command Example
+
+```java
+public class CheckShipCommand implements Command {
+
+    Ship ship;
+
+    public CheckShipCommand(Ship ship) {
+        this.ship = ship;
+    }
+
+    public void execute() {
+        if (!ship.getSuspects().isEmpty()) {
+            System.out.println("Found " + ship.getSuspects().size() + " suspects in " + ship.getName());
+        } else {
+            System.out.println("No one on board.");
+        }
+    }
+
+}
+```
+---
+
+class: bigfont
+
+# Star Wars Class Diagram
+
+<img src="images/starwars-classes.png" width="320" align="right"/>
+
+**Client**: Client
+
+**Concrete Commands**: CheckIdCommand, CheckShipCommand
+
+**Receiver**: Suspect, Ship
+
+**Invoker**: StormTrooper
 
 ---
 
@@ -372,22 +506,6 @@ The Command Pattern encapsulates a request as an object, thereby letting you par
 - Command
 - Receiver
 - Invoker
-
----
-
-class: bigfont
-
-# Stormtrooper Class Diagram
-
-<img src="images/starwars-classes.png" width="320" align="right"/>
-
-**Client**: Client
-
-**Concrete Commands**: CheckIdCommand, CheckShipCommand
-
-**Receiver**: Suspect, Ship
-
-**Invoker**: StormTrooper
 
 ---
 

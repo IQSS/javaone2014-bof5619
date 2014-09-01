@@ -10,7 +10,7 @@ public class CheckIdCommand implements Command {
 
     public void execute() {
         try {
-            System.out.println("Id for " + suspect + " is " + suspect.getId());
+            System.out.println("Id for " + suspect.getName() + " is " + suspect.getId());
         } catch (Exception ex) {
             System.out.println("Move along, move along.");
         }

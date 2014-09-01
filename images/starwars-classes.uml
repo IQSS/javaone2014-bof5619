@@ -16,38 +16,35 @@ class Client
 ' content
 ' -------
 
-' Command:
-Command : void execute()
-
 ' CheckShipCommand:
 Command <|.. CheckShipCommand
 CheckShipCommand --> "1" Ship
 CheckShipCommand : void execute()
-
-' CheckIdCommand:
-Command <|.. CheckIdCommand
-CheckIdCommand --> "1" Suspect
-CheckIdCommand : void execute()
-
-
-' Client:
-Client : void main(String)
-
-' Suspect:
-Suspect : String toString()
-Suspect : String getName()
-Suspect : void setName(String)
-Suspect : String getId()
-Suspect : void setId(String)
-
 
 ' StormTrooper:
 StormTrooper --> "1" Command
 StormTrooper : void setCommand(Command)
 StormTrooper : void execute()
 
+' Client:
+Client : void main(String)
+
+
+' Suspect:
+Suspect : String getName()
+Suspect : String getId()
+
+
 ' Ship:
 Ship : String getName()
 Ship : List getSuspects()
+
+' Command:
+Command : void execute()
+
+' CheckIdCommand:
+Command <|.. CheckIdCommand
+CheckIdCommand --> "1" Suspect
+CheckIdCommand : void execute()
 
 @enduml

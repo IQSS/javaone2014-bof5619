@@ -11,17 +11,8 @@ public class Suspect {
         this.type = type;
     }
 
-    @Override
-    public String toString() {
-        return name;
-    }
-
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getId() {
@@ -30,10 +21,6 @@ public class Suspect {
         } else {
             return id;
         }
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public enum Type {
