@@ -1,0 +1,62 @@
+@startuml
+
+' definitions
+' -----------
+
+' package "com.greptilian.javaone2014bof5619.dataverse"
+abstract CommandContext
+class DatasetServiceBean
+class DataFile
+interface Command
+class EjbDataverseEngine
+class Client
+class DeleteDataFileCommand
+class DataFileServiceBean
+class Dataset
+class User
+' end package
+
+' content
+' -------
+
+' Client:
+Client : void main(String)
+
+' Command:
+Command : Object execute(CommandContext)
+Command : Map getAffectedDvObjects()
+Command : User getUser()
+
+' EjbDataverseEngine:
+EjbDataverseEngine --> "1" CommandContext
+EjbDataverseEngine : Object submit(Command)
+EjbDataverseEngine : CommandContext getContext()
+
+' DataFileServiceBean:
+
+' DatasetServiceBean:
+
+' DataFile:
+DataFile --> "1" Dataset
+
+' CommandContext:
+CommandContext --> "1" DatasetServiceBean
+CommandContext --> "1" DataFileServiceBean
+CommandContext : DatasetServiceBean getDatasetServiceBean()
+CommandContext : DataFileServiceBean getDataFileServiceBean()
+
+' DeleteDataFileCommand:
+Command <|.. DeleteDataFileCommand
+DeleteDataFileCommand --> "1" User
+DeleteDataFileCommand --> "1" DataFile
+DeleteDataFileCommand --> "1" CommandContext
+DeleteDataFileCommand : Object execute(CommandContext)
+DeleteDataFileCommand : CommandContext getCommandContext()
+DeleteDataFileCommand : Map getAffectedDvObjects()
+DeleteDataFileCommand : User getUser()
+
+' Dataset:
+
+' User:
+
+@enduml
