@@ -15,6 +15,7 @@
       }
       .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
       /* Two-column layout */
+      /*
       .left-column {
         color: #777;
         width: 20%;
@@ -29,6 +30,7 @@
         float: right;
         padding-top: 1em;
       }
+      */
       .bigfont {
         font-size: 2em;
       }
@@ -432,14 +434,7 @@ public class Suspect {
     private Type type;
     private String id;
 
-    public Suspect(String name, Type type) {
-        this.name = name;
-        this.type = type;
-    }
-
-    public String getName() {
-        return name;
-    }
+    // constructors, getters, enum
 
     public String getId() {
         if (type.equals(Type.JEDI)) {
@@ -448,8 +443,6 @@ public class Suspect {
             return id;
         }
     }
-
-    public enum Type { JEDI, OTHER }
 }
 ```
 
@@ -507,152 +500,9 @@ The Command Pattern encapsulates a request as an object, thereby letting you par
 - Receiver
 - Invoker
 
----
+???
 
-class: bigfont
-
-# Definining the command pattern
-
-- command
-- receiver
-- invoker
-- client
-
---
-
-An example from http://en.wikipedia.org/wiki/Command_pattern
-
----
-
-.left-column[
-  ## Four terms
-  ### - command
-]
-.right-column[
-
-# command
-
-A command object has a receiver object and invokes a method of the receiver in a way that is specific to that receiver's class. 
-
-```java
-/* The Command interface */
-public interface Command {
-   void execute();
-}
- 
-/* Command for turning on light - ConcreteCommand #1 */
-public class FlipUpCommand implements Command {
-   private Light theLight;
- 
-   public FlipUpCommand(Light light) {
-      this.theLight = light;
-   }
- 
-   public void execute(){
-      theLight.turnOn();
-   }
-}
-```
-
-]
-
----
-
-.left-column[
-  ## Four terms
-  ### - command
-  ### - receiver
-]
-.right-column[
-
-# receiver
-
-The receiver may be called the target. It does the work.
-
-```java
-/* The Receiver class */
-public class Light {
- 
-   public void turnOn() {
-      System.out.println("The light is on");
-   }
- 
-   public void turnOff() {
-      System.out.println("The light is off");
-   }
-}
-```
-
-]
-
----
-
-.left-column[
-  ## Four terms
-  ### - command
-  ### - receiver
-  ### - invoker
-]
-.right-column[
-
-# invoker
-
-The invoker invokes the command and optionally does bookkeeping about the command execution.
-
-```java
-/* The Invoker class */
-public class Switch {
-   private List<Command> history = new ArrayList<Command>();
- 
-   public void storeAndExecute(Command cmd) {
-      this.history.add(cmd); // optional 
-      cmd.execute();        
-   }
-}
-```
-
-]
-
----
-
-.left-column[
-  ## Four terms
-  ### - command
-  ### - receiver
-  ### - invoker
-  ### - client
-]
-.right-column[
-
-# client
-
-The client contains the decision making about which commands to execute at which points.
-
-```java
-/* The test class or client */
-public class PressSwitch {
-   public static void main(String[] args){
-      Light lamp = new Light();
-      Command switchUp = new FlipUpCommand(lamp);
-      Command switchDown = new FlipDownCommand(lamp);
- 
-      Switch mySwitch = new Switch();
- 
-      switch(args[0]) {
-         case "ON":
-            mySwitch.storeAndExecute(switchUp);
-         break;
-         case "OFF":
-            mySwitch.storeAndExecute(switchDown);
-         break;
-         default:
-            System.out.println("ON or OFF?");
-       }
-   }
-}
-```
-
-]
+I wonder what Darth Vader would have to say about this.
 
 ---
 
@@ -663,6 +513,28 @@ public class PressSwitch {
 </blockquote>
 
 <img src="images/schedule.jpg" width="600"/>
+
+???
+
+He may say something like, "You may dispense with the pleasantries, Commander. I'm here to put you back on schedule."
+
+---
+
+# Command Pattern in Dataverse
+
+- Command constructors take as arguments the user who will be invoking the command and the objects onto which the command will be invoked
+- Ensure user has sufficient permission
+- Commands make use of EJB service beans
+
+???
+
+Right, so... let's talk about applying the command pattern to a real world Java EE application... Dataverse!
+
+I'd say we started with the command pattern but we introduced additinal concepts we needed for our app.
+
+Again, the command pattern was added when we started implementing permissions.
+
+We also created something that's called (in code anyway), a CommandEngine. More on this in a bit.
 
 ---
 
