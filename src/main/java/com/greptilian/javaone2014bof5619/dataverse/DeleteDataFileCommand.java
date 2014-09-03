@@ -2,11 +2,11 @@ package com.greptilian.javaone2014bof5619.dataverse;
 
 import java.util.Map;
 
+@RequiredPermissions(Permission.DestructiveEdit)
 public class DeleteDataFileCommand implements Command {
 
     private User user;
     private DataFile dataFile;
-    private CommandContext context;
 
     public DeleteDataFileCommand(User user, DataFile dataFile) {
         this.user = user;
@@ -16,10 +16,6 @@ public class DeleteDataFileCommand implements Command {
     public Object execute(CommandContext context) {
         System.out.println("Deleted file!");
         return null;
-    }
-
-    public CommandContext getCommandContext() {
-        return context;
     }
 
     @Override
