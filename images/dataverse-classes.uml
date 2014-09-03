@@ -13,6 +13,8 @@ class EjbDataverseEngine
 class Client
 class DeleteDataFileCommand
 class DataFileServiceBean
+note "one of many service beans" as Note1
+DataFileServiceBean .. Note1
 class User
 ' end package
 
@@ -24,24 +26,10 @@ DataFileServiceBean  ..>  DataFile
 ' content
 ' -------
 
-' Client:
-Client : void main(String)
-
-' EjbDataverseEngine:
-EjbDataverseEngine --> "1" CommandContext
-EjbDataverseEngine : Object submitAndExecute(Command)
-EjbDataverseEngine : CommandContext getContext()
-
-' RequiredPermissions:
-RequiredPermissions : Permission value()
-RequiredPermissions : String dvObjectName()
-
 ' Permission:
 Permission : Permission values()
 Permission : Permission valueOf(String)
 Permission : String getDescription()
-
-' DataFile:
 
 ' DataFileServiceBean:
 
@@ -53,7 +41,14 @@ DeleteDataFileCommand : Object execute(CommandContext)
 DeleteDataFileCommand : Map getAffectedDvObjects()
 DeleteDataFileCommand : User getUser()
 
-' CommandContext:
+' EjbDataverseEngine:
+EjbDataverseEngine --> "1" CommandContext
+EjbDataverseEngine : Object submitAndExecute(Command)
+EjbDataverseEngine : CommandContext getContext()
+
+' RequiredPermissions:
+RequiredPermissions : Permission value()
+RequiredPermissions : String dvObjectName()
 
 ' Command:
 Command : Object execute(CommandContext)
@@ -61,5 +56,12 @@ Command : Map getAffectedDvObjects()
 Command : User getUser()
 
 ' User:
+
+' CommandContext:
+
+' Client:
+Client : void main(String)
+
+' DataFile:
 
 @enduml

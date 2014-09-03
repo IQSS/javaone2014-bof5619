@@ -542,8 +542,13 @@ We also created something that's called (in code anyway), a CommandEngine. More 
 
 <img src="images/dataverse-classes.png" width="600"/>
 
-- adjusted and simplified from actual code: https://github.com/IQSS/dataverse
-- exceptions not shown: **PermissionException** and **IllegalCommandException**
+???
+
+- adjusted and simplified from actual code
+- EjbDataverseEngine is the invoker
+- service beans are the receivers (nearly all available in CommandContext)
+- PermissionException can be thrown
+- IllegalCommandException thrown if command doesn't make sense
 
 ---
 
