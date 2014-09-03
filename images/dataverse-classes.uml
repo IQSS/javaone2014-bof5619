@@ -5,7 +5,6 @@
 
 ' package "com.greptilian.javaone2014bof5619.dataverse"
 interface CommandContext
-class DatasetServiceBean
 enum Permission
 class DataFile
 interface RequiredPermissions
@@ -17,18 +16,21 @@ class DataFileServiceBean
 class User
 ' end package
 
-CommandContext  --> "1" DatasetServiceBean
 CommandContext  --> "1" DataFileServiceBean
-RequiredPermissions  -- "1..*" Permission
-Command  ..>  RequiredPermissions:has
-Command  ..>  CommandContext:has
+RequiredPermissions  --> "1..*" Permission
+Command  --> "1" RequiredPermissions
+EjbDataverseEngine  -->  Command
+DataFileServiceBean  ..>  DataFile
 ' content
 ' -------
 
-' Command:
-Command : Object execute(CommandContext)
-Command : Map getAffectedDvObjects()
-Command : User getUser()
+' Client:
+Client : void main(String)
+
+' EjbDataverseEngine:
+EjbDataverseEngine --> "1" CommandContext
+EjbDataverseEngine : Object submitAndExecute(Command)
+EjbDataverseEngine : CommandContext getContext()
 
 ' RequiredPermissions:
 RequiredPermissions : Permission value()
@@ -39,23 +41,9 @@ Permission : Permission values()
 Permission : Permission valueOf(String)
 Permission : String getDescription()
 
-' User:
+' DataFile:
 
 ' DataFileServiceBean:
-
-' DatasetServiceBean:
-
-' Client:
-Client : void main(String)
-
-' CommandContext:
-
-' EjbDataverseEngine:
-EjbDataverseEngine --> "1" CommandContext
-EjbDataverseEngine : Object submit(Command)
-EjbDataverseEngine : CommandContext getContext()
-
-' DataFile:
 
 ' DeleteDataFileCommand:
 Command <|.. DeleteDataFileCommand
@@ -64,5 +52,14 @@ DeleteDataFileCommand --> "1" DataFile
 DeleteDataFileCommand : Object execute(CommandContext)
 DeleteDataFileCommand : Map getAffectedDvObjects()
 DeleteDataFileCommand : User getUser()
+
+' CommandContext:
+
+' Command:
+Command : Object execute(CommandContext)
+Command : Map getAffectedDvObjects()
+Command : User getUser()
+
+' User:
 
 @enduml

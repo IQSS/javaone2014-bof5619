@@ -3,8 +3,7 @@ package com.greptilian.javaone2014bof5619.dataverse;
 import java.util.Map;
 
 /**
- * @depend - has - RequiredPermissions
- * @depend - has - CommandContext
+ * @navassoc - - 1 RequiredPermissions
  */
 public interface Command<R> {
 

@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @assoc - - 1..* Permission
+ * @navassoc - - 1..* Permission
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

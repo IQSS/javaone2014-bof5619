@@ -13,7 +13,7 @@ public class Client {
         DataFile file1 = new DataFile();
         Command delFileCmd = new DeleteDataFileCommand(user1, file1);
         try {
-            commandEngine.submit(delFileCmd);
+            commandEngine.submitAndExecute(delFileCmd);
         } catch (CommandException ex) {
             System.out.println("Uh oh! " + ex);
         }
