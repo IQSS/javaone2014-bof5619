@@ -38,5 +38,6 @@ _Michael_
         * not entirely, due to dependency injections etc.
         * We can replace everything except `EntityManager`s, JMS queue pools etc.
         * Lessons learned section
-
-
+- History - GoF 1994
+- Intro
+    + Real world project running into real world problems
