@@ -47,6 +47,15 @@
         text-decoration: line-through;
       }
 
+      .bottom-remark {
+        font-size: 0.5em;
+        color: gray;
+        position: absolute;
+        bottom: 1em;
+        left: 0;
+        right: 0;
+      }
+
       .slide-badge {
         position: absolute;
         right: 20px;
@@ -556,7 +565,7 @@ Why would we like to ignore commands? Maybe, if the user that issued them does n
 
 For Dataverse 4.0, a Java EE 7 app which needs to support sensitive data and a full API, we wanted:
 * Maximal code re-use between the API and the UI
-* By-design, Permission-based security.
+* By-design, permission-based security.
 
 .center[ <img src="images/dvn4.png" alt="">]
 
@@ -667,7 +676,16 @@ He doesn't seem to use the term "invoker" but to him it's the "command server". 
 
 # Merging Java EE and Commands
 
-We need to push the server context to a POJO.
+* TODO present the mvcc-ee
+  * our command
+    - modern touches (not stateless, but with less state, generics )
+    - Context, so no dependency injection needed (pojo)
+      - Testability using JUnit!
+    - Metadata
+      - Permission Annotations
+      - user
+      - Receiver of a given type (DvObject)
+
 
 ???
 
@@ -680,7 +698,7 @@ Command pattern examples:
 - CreateDatasetCommand
 - PublishDatasetCommand
 - DeleteDataFileCommand
-- ...
+- Reuse: get latest draft/published/accessible version
 
 ???
 
@@ -720,8 +738,19 @@ One of the main areas where we wanted more flexibility was in our system for per
 
 ---
 
-# Lean Beans Design Pattern
+# Implementation Points
 
+- Permission are an enum, stored as bit field in the DB (long)
+  - no joins, bitwise tests.
+- Static vs Dynamic permission lists. Can't support e.g. Decorator. Considering a static/dynamic approach to support this
+  - maybe implemented by then??
+
+---
+
+# Lean Beans Design Pattern
+- traditional JavaEE uses service beans to modify models
+- We use commands
+- &rarr; Can we get rid of service beans? would that be wise?
 - business logic goes in commands
 - service beans do basic CRUD
 
@@ -750,6 +779,14 @@ One of the main areas where we wanted more flexibility was in our system for per
 - http://javapapers.com/design-patterns/command-design-pattern/
 - http://iqss.github.io/javaone2014-bof5619 (sample code from this talk)
 
+---
+class: middle center
+
+#Thanks
+
+.bottom-remark[
+Presentation created using remark.js. UML drawings done with PlantUML.
+]
     </textarea>
     <script src="js/remark-0.6.5.min.js" type="text/javascript">
     </script>
