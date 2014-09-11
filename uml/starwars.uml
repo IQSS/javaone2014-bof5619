@@ -1,0 +1,47 @@
+@startuml
+
+class StormTrooper <Invoker> {
+  + command
+  + execute()
+}
+
+interface Command {
+  execute()
+}
+
+class CheckIdCommand {
+  + suspect
+}
+class CheckShipCommand {
+  + spaceship
+}
+
+class Suspect <Reciever> {
+  + id
+  + getId()
+}
+
+class Jedi {
+  + getId()
+}
+
+class Ship <Reciever> {
+  + name: String
+  + suspects: List<Suspect>
+}
+
+class Client {
+  
+}
+
+Client ..> StormTrooper: « invokes »
+Client ..> Command: « \ncreates »
+Ship o-left-> Suspect
+Jedi -right-|> Suspect
+CheckIdCommand .up.|> Command
+CheckShipCommand .up.|> Command
+CheckIdCommand "*" o--> "1" Suspect
+CheckShipCommand "*" o--> "1" Ship
+StormTrooper "*" o-left-> "1" Command
+
+@enduml

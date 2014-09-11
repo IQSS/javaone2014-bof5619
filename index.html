@@ -5,6 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <style type="text/css">
       @import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(http://fonts.googleapis.com/css?family=Architects+Daughter);
       @import url(http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
       @import url(http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
 
@@ -36,6 +37,40 @@
       }
       .regularfont {
         font-size: .7em;
+      }
+      .btw {
+        font-size: .65em;
+        color: #444;
+      }
+  
+      .deleted {
+        text-decoration: line-through;
+      }
+
+      .slide-badge {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        border: 1px black solid;
+        -ms-transform: rotate(-7deg); /* IE 9 */
+        -webkit-transform: rotate(-7deg); /* Chrome, Safari, Opera */
+        transform: rotate(-7deg);
+      }
+      .slide-emph-max {
+        color: white;
+        background-color: black;
+      }
+      .slide-emph-mid {
+        background-color: #00d56b;
+      }
+      
+      .speech {
+        background-color: white;
+        border-radius: 1em 1em 1em 0.2em;
+        padding: 0.5em;
+        border: 1px black solid;
+        box-shadow: 0 2px 4px rgba(0,0,0,.5);
+        font-family: 'Architects Daughter';
       }
 
       /* from http://nicolasgallagher.com/pure-css-speech-bubbles/demo/ */
@@ -108,7 +143,7 @@ class: bottom
 <img src="images/michbarsinai.jpg" width="60" align="left" style="border:5px solid transparent" />
 Michael Bar-Sinai ([@michbarsinai](https://twitter.com/michbarsinai))  
 http://www.iq.harvard.edu/people/michael-bar-sinai  
-http://mbarsinai.com/blog
+http://mbarsinai.com
 
 <img src="images/philipdurbin.jpg" width="60" align="left" style="border:5px solid transparent" />
 Philip Durbin ([@philipdurbin](https://twitter.com/philipdurbin))  
@@ -131,10 +166,10 @@ class: bigfont
 
 # Agenda
 
-1. Intro (this is real world)
+1. Intro
 2. MVC, Java EE MVC, Classic command
-3. Command in Dataverse 4.0
-  * permissions, engine, testability etc,
+3. Command Adaptation for modern Java EE
+  * With real-world examples!
 4. The Lean Beans Design Pattern
 
 .regularfont[
@@ -147,9 +182,10 @@ https://github.com/IQSS/javaone2014-bof5619
 
 Here's the agenda for this talk.
 
-We've applied the command pattern to a real-world application that's open source on GitHub. This was not an academic exercise.
+First off, don't let the little crimson logo confuse you. We will not be talking about is not an academic exercise, but rather applying the command pattern to real-world application called "Dataverse". There are several installations of it, the one at Harvard housing the world's largest collection of social datasets (about 749K Files for 54K Studies). Fork it on GitHub.
 
-We've going to talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
+First, we'll talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
+Then, we'll present the adjustments we've made to the command pattern to adapt it to Java EE, modern programming and a permission-based system.
 
 By way of example, we're going to show how we adjusted the command pattern the open source application I mentioned called Dataverse, which is an application for storing research data.
 
@@ -161,30 +197,58 @@ This entire talk, including the code, has already been posted to GitHub. You sho
 
 # Classic MVC
 
-- Model: database
-- View: what you see
-- Controller: manipulates the model
+Goal: <strong>Separate data from its representation</strong>
+- Model: Business objects
+- View: What the users sees and interacts with
+- Controller: Manipulates the model according to inputs from the view
 
-<img src="images/gof.png" width="300"/>
+.center[
+  <img src="uml/mvc.svg" width="350"/>
+]
+<!-- <img src="images/gof.png" width="300"/>
 <img src="images/hfdp.jpg" width="300"/>
-
+ -->
 ???
 
-In classic MVC, the model is commonly a database, the view is what you see, and the controller is manipulates the model. 
+In classic MVC:
+  * the model consists of business objects - pure concepts implemented in your language of choice, 
+  * the view is what the user sees and interacts with, 
+  * and the controller is manipulates the model. 
 
-Of course, patterns such as this gained popularity after the Gang of Four book was published in 1994. Another book we recommend, especially for Java developers, is Head First Design Patterns.
+MVC separates the user interactions from the data. This proved to be a clean way that also facilitates reuse.
+
+This pattern was developed by Trygve Reenskaug, while visiting Xerox PARC in '79 working on graphical user interfaces using SmallTalk. It's interesting to note that it is _not_ part of the GoF patterns.
+
+The main benefit here is that the model can be viewed in many ways without cluttering it and views can possibly be used to display different models.
+
+---
+# The Command Pattern
+.slide-badge[
+  <img src="images/gof.png" width="100">
+]
+
+Goal: <strong>Capture operations on the model as data</strong>
+
+.center[
+  <img src="uml/mvcc.svg" width="450"/>
+]
+???
+
+Presented in the classic GoF book, this pattern captures modifications to the model objects as data.
 
 ---
 
-# MVC in Java EE
+class: bigfont
 
-- Model: persistence
-- View: JSF
-- Controller: service beans
+# Official GoF definition
+
+<img src="images/gof.png" width="300" align="right"/>
+
+The Command Pattern encapsulates a request as an object, thereby letting you parameterize other objects with different requests, queue or log requests, and support undoable operations.
+
+Objects in play: Client, Command, Receiver, and Invoker
 
 ???
-
-Let's move on the MVC in Java EE. The standardized view is JSF and the the controller is typically made up of service beans.
 
 ---
 
@@ -241,19 +305,15 @@ Should be a piece cake. How hard could this be?
 
 ---
 
-# CheckIdCommand and supertype
-
-<img src="images/not-the-droids.png" width="600"/>
+# The Command supertype
+.center[
+  <img src="images/not-the-droids.png" width="600"/>
+]
 
 ```java
-public class CheckIdCommand implements Command {
-    // coming soon!
-}
 
 public interface Command {
-
     void execute();
-
 }
 
 ```
@@ -264,17 +324,20 @@ So! You've got this CheckIdCommand.
 
 The first thing to notice is that the individual commands always implements the command interface.
 
-(Technically, you don't have to use the `interface` keyword; It can be an abstract class.)
+(Technically, you don't have to use the `interface` keyword; It can be any class.)
 
 Notice that the command interface is very simple. It only requires that you implement a single method, which is often called `execute()`.
 
 That's some of the power of the dark side... er, power of the command pattern... that no matter what the command is called, the complexity is hidden behind a consistently named method such as execute.
 
 ---
+layout: true
+.slide-badge[
+  <img src="images/not-the-droids.png" width="200"/>
+]
+---
 
 # Complete CheckIdCommand
-
-<img src="images/not-the-droids.png" width="200"/>
 
 ```java
 public class CheckIdCommand implements Command {
@@ -287,7 +350,8 @@ public class CheckIdCommand implements Command {
 
     public void execute() {
         try {
-            System.out.println("Id for " + suspect.getName() + " is " + suspect.getId());
+            System.out.println("Id for " + suspect.getName() 
+                                    + " is " + suspect.getId());
         } catch (Exception ex) {
             System.out.println("Move along, move along.");
         }
@@ -311,66 +375,50 @@ That's all contained in the execute() method, which again is required by the com
 
 # The Client
 
-<img src="images/not-the-droids.png" width="200"/>
+- command bound to receiver
+- invoker is given a command to execute, and told to execute it
 
 ```java
 System.out.println("# Mos Eisley checkpoint");
-Suspect obiwan = new Suspect("Obiwan", Suspect.Type.JEDI); // receiver
-Command checkIdCommand = new CheckIdCommand(obiwan);
-StormTrooper stormTrooper = new StormTrooper(checkIdCommand); // invoker
-stormTrooper.execute(); // Move along, move along.
-```
 
-- command bound to receiver
-- invoker is given a command to execute
+StormTrooper stormTrooper = /* Recruit trooper here */
+Suspect obiwan = new Jedi("Obiwan"); // receiver
+Command checkIdCommand = new CheckIdCommand(obiwan);
+
+stormTrooper.setCommand( checkIdCommand ); // invoker
+*stormTrooper.execute(); // Move along, move along.
+```
 
 ???
 
-In the command pattern the client is the piece ties it everthing together. We'll see all of the components in play.
+In the command pattern the client is the piece ties it everything together. We'll see all of the components in play.
 
-Before we instatiate our CheckIdCommand, we need to decide which Suspect we're going to bind it to. Whose id are we going to check? A Jawa? A Tuskan Raider? No... we've got Obiwan here, so he's what gets passed in when we create the command. Obiwan is the "receiver" of the command.
+Before we instantiate our CheckIdCommand, we need to decide which Suspect we're going to bind it to. Whose id are we going to check? A Jawa? A Tuskan Raider? No... we've got Obiwan here, so he's what gets passed in when we create the command. Obiwan is the "receiver" of the command.
 
-And who's going to execute the CheckIdCommand? The stormtrooper. We've got a constructor that allows us to instantiate the stormtrooper with the command we want.
+And who's going to execute the CheckIdCommand? The stormtrooper. 
 
 Of course, when we call execute that stupid JediMindTrick exception gets thrown so we just say, "We don't need to see his identification." 
 
 ---
 
 # One Invoker, Two Commands
-
-<img src="images/not-the-droids.png" width="200"/>
+same stormtrooper given different commands
 
 ```java
+StormTrooper stormTrooper = /* Recruit trooper here */
+
 System.out.println("# Mos Eisley checkpoint");
-Suspect obiwan = new Suspect("Obiwan", Suspect.Type.JEDI); // receiver
-Command checkIdCommand = new CheckIdCommand(obiwan);
-StormTrooper stormTrooper = new StormTrooper(checkIdCommand);
+Suspect obiwan = new Jedi("Obiwan"); // receiver
+*Command checkIdCommand = new CheckIdCommand(obiwan);
+stormTrooper.setCommand(checkIdCommand);
 stormTrooper.execute(); // Move along, move along.
 
 System.out.println("# Death Star hangar");
-Ship falcon = new Ship("Millenium Falcon", Ship.Type.SMUGGLING); // receiver
-Command checkShipCommand = new CheckShipCommand(falcon);
+Ship falcon = new Ship("Millenium Falcon"); // receiver
+*Command checkShipCommand = new CheckShipCommand(falcon);
 stormTrooper.setCommand(checkShipCommand); // same invoker, new command
 stormTrooper.execute(); // No one on board.
 ```
-
-- same stormtrooper given different commands
-
----
-
-class: bigfont
-
-# Star Wars Class Diagram
-
-<img src="images/starwars-classes.png" width="320" align="right"/>
-
-**Client**: Client
-
-**Concrete Commands**: CheckIdCommand, CheckShipCommand
-
-**Receiver**: Suspect, Ship
-
-**Invoker**: StormTrooper
 
 ---
 
@@ -396,25 +444,33 @@ public class StormTrooper {
 }
 
 ```
+
+???
+
+This adheres to the classic 1994 book implementation - note the statefulness, where you first set a field and then use another call to request the invoker to invoke the command.
+
 ---
 
 # Suspect/Receiver
 
 ```java
 public class Suspect {
-
-    private String name;
-    private Type type;
-    private String id;
-
-    // constructors, getters, enum
+    // fields, constructors, getters
 
     public String getId() {
-        if (type.equals(Type.JEDI)) {
-            throw new RuntimeException("Jedi mind trick!");
-        } else {
-            return id;
-        }
+        return id;
+    }
+}
+```
+
+Jedies were always in a class of their own.
+
+```java
+public class Jedi extends Suspect {
+  
+    @Override
+    public String getId() {
+      throw new RuntimeException("Jedi mind trick!");
     }
 }
 ```
@@ -422,6 +478,7 @@ public class Suspect {
 ---
 
 # Another Command Example
+
 
 ```java
 public class CheckShipCommand implements Command {
@@ -433,70 +490,78 @@ public class CheckShipCommand implements Command {
     }
 
     public void execute() {
-        if (!ship.getSuspects().isEmpty()) {
-            System.out.println("Found " + ship.getSuspects().size() + " suspects in " + ship.getName());
-        } else {
-            System.out.println("No one on board.");
-        }
+        System.out.println( 
+            ship.getSuspects().isEmpty() ? "No one on board." 
+                    : "Found " + ship.getSuspects().size() 
+                                 + " suspects in " + ship.getName());
     }
 
 }
 ```
----
-
-class: bigfont
-
-# Star Wars Class Diagram
-
-<img src="images/starwars-classes.png" width="320" align="right"/>
-
-**Client**: Client
-
-**Concrete Commands**: CheckIdCommand, CheckShipCommand
-
-**Receiver**: Suspect, Ship
-
-**Invoker**: StormTrooper
 
 ---
 
-class: bigfont
+<h1>Star Wars Class Diagram</h1>
 
-# Official GoF definition
-
-<img src="images/gof.png" width="300" align="right"/>
-
-The Command Pattern encapsulates a request as an object, thereby letting you parameterize other objects with different requests, queue or log requests, and support undoable operations.
-
-Objects in play: Client, Command, Receiver, and Invoker
+.center[
+  <img src="uml/starwars.svg" width="500"/>
+]
 
 ???
 
-...
+---
+layout: true
 
 ---
 
+class: middle center slide-emph-mid
+
+#But what's in it for us?
+.left[
+* Why not call `execute()` on the command from the client code?
+* Why not put the functionality of `execute()` in a normal function instead of creating new objects?
+* _Yet another_ level of indirection? Don't we have enough of these?
+]
+---
 # Code as Data
-
-- Macros, as sequence of commands
-- ignoring (permissions/disable)
-- logging
-- testability
-- execute on a different thread
-    - Add serialization to that....
+The command pattern allows us to treat code blocks as data. So we can:
+- Reuse actions from different controllers
+- Store commands in data structures
+  - Queue commands
+  - Map keys to commands (events triggering actions)
+- Execute on a different thread
+    - Plays well with serialization
+- Execute macros, as sequence of commands
 - When commands can invoke commands - we get full recursive-ness
+- Test better
+- Log better
+- Easy extend to support undo and command history
+
+We can do all this (and more!) with commands.
+
+.right[But there's one very special thing we can also do...]
 
 ???
 
-So, really - we take a block of code and its parameters, an use it as a data (think of storing commands in a Map, where the key is an event id - for triggered command execution). What's another version of this? Right, lambda expressions. This is fundamentally different from the traditional procedural Code/Data dichotomy. This opens up lots of opportunities:
+So, really - we take a block of code and its parameters, an use it as a data (think of storing commands in a Map, where the key is an event id - for triggered command execution). What's another version of this? Right, lambda expressions. This is fundamentally different from the traditional procedural Code/Data dichotomy.
+---
+class: middle center slide-emph-max
+.bigfont[ Ignore Them. ]
 
-- Macros, as sequence of commands
-- ignoring (permissions/disable)
-- logging
-- testability
-- execute on a different thread
-    - Add serialization to that....
-- When commands can invoke commands - we get full recursive-ness
+???
+Why would we like to ignore commands? Maybe, if the user that issued them does not have a permission to do so (you can't disable buttons when you write an API). Or maybe they make no sense.
+
+---
+# Why We Chose Command
+
+For Dataverse 4.0, a Java EE 7 app which needs to support sensitive data and a full API, we wanted:
+* Maximal code re-use between the API and the UI
+* By-design, Permission-based security.
+
+.center[ <img src="images/dvn4.png" alt="">]
+
+
+With some extensions and infrastructure (shown later) - we got just that.
 
 ---
 
@@ -516,7 +581,9 @@ Of course, Darth Vader doesn't care about all this. He just wants you to build t
 
 # Back to Java EE
 
-<img src="images/deathstar.jpg" width="500"/>
+.middle.center[
+  <img src="images/deathstar-gf.png" width="500"/>
+]
 
 ???
 
@@ -527,6 +594,45 @@ Ok, they slipped some Python in there too.
 But you know, Darth Vader doesn't know (or care) but since we're talking about Java EE, let see how we can start to apply the command pattern to it.
 
 ---
+
+# MVC in Java EE
+
+Balancing clean design and practicality.
+.center[
+  <img src="uml/mvc-ee.svg" width="500">
+]
+
+.btw[
+ Note: We show one interpretation here - there are other interpretations as well.
+]
+
+???
+
+Let's move on the MVC in Java EE. Not as clean, but handles persistence and handles the complexities of a GUI over stateless protocol such as HTTP.
+
+We've drown the lines between the boxes, other people would probably place them differently.
+
+Also note that some annotations, such as the validation ones, go against this separation by adding user interface texts to the model objects (e.g `@NotBlank(message = "Please enter an identifier for your dataset.")`)
+
+---
+# MVC in Java EE
+
+Balancing clean design and practicality.
+.center[
+  <img src="uml/mvc-ee.svg" width="500">
+]
+.btw[
+ Note: We show one interpretation here - there are other interpretations as well.
+]
+
+<div style="position: absolute; top:140px; left: 230px" class="speech">Now, how do I cram <strong>Command</strong> in here?</div>
+<div style="position: absolute; top:180px; left: 230px">/</div>
+
+---
+<!--
+Michael edited up to here
+-->
+
 
 # Nothing New Under The Sun
 

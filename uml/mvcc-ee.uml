@@ -1,0 +1,20 @@
+@startuml
+
+actor      user
+participant view
+participant controller
+participant engine
+
+user -> view : click button
+view -> controller : button_clicked()
+create command
+controller -> command : new( user, data )
+controller -> engine: submit(command)
+engine -> command : execute( context )
+command -> model: change
+command --> engine: OK
+engine --> controller : OK
+controller --> view : OK
+view --> user : "OK"
+
+@enduml

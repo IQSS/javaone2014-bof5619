@@ -1,0 +1,28 @@
+@startuml
+
+actor      user
+box "view" #EEEEEE
+  participant jsf as "JSF"
+  participant backing as "Backing Bean"
+end box
+box "controller" #EEEEFF
+  participant svc as "Service Beans"
+end box
+box "model" #FFFFEE
+  participant ent as "@Entity"
+  database em as "EntityManager (?)"
+end box
+
+user -> jsf : click button
+jsf -> backing : button_clicked()
+backing -> backing : validate
+backing -> svc : change
+svc -> ent : change
+svc <-- ent : ok
+svc -> em : persist
+svc <-- em : ok
+backing <-- svc : ok
+jsf <-- backing : ok
+user <-- jsf : "OK"
+
+@enduml

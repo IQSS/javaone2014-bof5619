@@ -1,0 +1,10 @@
+@startuml
+
+actor      user
+
+user -> view : click button
+view -> controller : button_clicked()
+controller -> controller : validate
+controller -> model : change
+
+@enduml

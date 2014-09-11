@@ -1,0 +1,21 @@
+@startuml
+
+actor      user
+participant view
+participant controller
+box "command"
+  participant command
+  participant invoker
+end box
+participant model
+
+user -> view : click button
+view -> controller : button_clicked()
+create command
+controller -> command : new
+controller -> invoker : set(command)
+controller -> invoker : execute()
+invoker -> command: execute()
+command -> model: change
+
+@enduml
