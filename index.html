@@ -191,12 +191,13 @@ https://github.com/IQSS/javaone2014-bof5619
 
 Here's the agenda for this talk.
 
-First off, don't let the little crimson logo confuse you. We will not be talking about is not an academic exercise, but rather applying the command pattern to real-world application called "Dataverse". There are several installations of it, the one at Harvard housing the world's largest collection of social datasets (about 749K Files for 54K Studies). Fork it on GitHub.
+First off, don't let the little crimson logo confuse you. We will not be talking about is not an academic exercise, but rather applying the command pattern to a real-world application called "Dataverse". There are several installations of it, the one at Harvard housing the world's largest collection of social datasets (about 749 thousand files for 54 thousand datasets). You can fork it on GitHub.
 
 First, we'll talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
+
 Then, we'll present the adjustments we've made to the command pattern to adapt it to Java EE, modern programming and a permission-based system.
 
-By way of example, we're going to show how we adjusted the command pattern the open source application I mentioned called Dataverse, which is an application for storing research data.
+By way of example, we're going to show how we adjusted the command pattern our Dataverse application.
 
 Finally, we'll generalize the lessons learned and explain why we refer to the pattern as the "Lean Beans Design Pattern."
 
@@ -276,7 +277,7 @@ class: bigfont
 
 In Head First Design Patterns you'll see the client is a customer at a diner, who makes an order, which is the command, that goes to the waitress, who is the "invoker", who gives it to the cook, who is the "receiver". 
 
-Then they talk about a remote control with buttons you can program, all using the command pattern. It's very well done. It's a great book.
+Then they talk about a remote control with buttons you can program, all using the command pattern.
 
 ---
 
@@ -329,15 +330,13 @@ public interface Command {
 
 ???
 
-So! You've got this CheckIdCommand.
-
-The first thing to notice is that the individual commands always implements the command interface.
+Let's first look at a Command object. Notice that it's an interface. Individual commands will implement this interface.
 
 (Technically, you don't have to use the `interface` keyword; It can be any class.)
 
 Notice that the command interface is very simple. It only requires that you implement a single method, which is often called `execute()`.
 
-That's some of the power of the dark side... er, power of the command pattern... that no matter what the command is called, the complexity is hidden behind a consistently named method such as execute.
+That's some of the power of the dark side... er, power of the command pattern... that no matter what the command is called, the complexity is hidden behind a consistently named method such as "execute".
 
 ---
 layout: true
@@ -472,7 +471,7 @@ public class Suspect {
 }
 ```
 
-Jedies were always in a class of their own.
+Jedi were always in a class of their own.
 
 ```java
 public class Jedi extends Suspect {
