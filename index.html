@@ -105,6 +105,12 @@ class: bottom
 
 # BOF5619 - Lean Beans (are made of this): Command pattern vs. MVC
 
+<img src="images/michbarsinai.jpg" width="60" align="left" style="border:5px solid transparent" />
+Michael Bar-Sinai ([@michbarsinai](https://twitter.com/michbarsinai))  
+http://www.iq.harvard.edu/people/michael-bar-sinai  
+http://mbarsinai.com/blog
+
+<img src="images/philipdurbin.jpg" width="60" align="left" style="border:5px solid transparent" />
 Philip Durbin ([@philipdurbin](https://twitter.com/philipdurbin))  
 http://www.iq.harvard.edu/people/philip-durbin  
 http://greptilian.com
@@ -117,7 +123,7 @@ Hello! Thanks for coming. Let's get going.
 
 This is Birds Of A Feather 5619, "Lean Beans (are made of this): Command pattern vs. MVC."
 
-My name is Philip Durbin and I'm developer at the Institute for Quantitative Social Science at Harvard University. That's IQSS on GitHub.
+We are Michael Bar-Sinai and Philip Durbin, developers at the Institute for Quantitative Social Science at Harvard University. That's IQSS on GitHub.
 
 ---
 
@@ -125,12 +131,11 @@ class: bigfont
 
 # Agenda
 
-1. intro ( this is real world)
-2. MVC, Java EE MVC , Classic command
-  * Dataverse 4.0
-3. Command in DV4.0
-  * permissions, engine, testability etc
-4. Presenting the Lean Beans Design Pattern
+1. Intro (this is real world)
+2. MVC, Java EE MVC, Classic command
+3. Command in Dataverse 4.0
+  * permissions, engine, testability etc,
+4. The Lean Beans Design Pattern
 
 .regularfont[
 Slides and code:
@@ -140,110 +145,79 @@ https://github.com/IQSS/javaone2014-bof5619
 
 ???
 
-The agenda for this talk is pretty simple:
+Here's the agenda for this talk.
 
-- Why
-- What
-- How
-- Whither
+We've applied the command pattern to a real-world application that's open source on GitHub. This was not an academic exercise.
 
-I'm going to talk a bit about how my team came to adopt the command pattern before diving down into what it is... with plenty of code samples.
+We've going to talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
 
-I've been to a few talks by Arun Gupta and he always says, "Code is king," and I just love that. So the code is coming. Relax.
+By way of example, we're going to show how we adjusted the command pattern the open source application I mentioned called Dataverse, which is an application for storing research data.
 
-And... this entire talk, including the code, has already been posted to GitHub.
+Finally, we'll generalize the lessons learned and explain why we refer to the pattern as the "Lean Beans Design Pattern."
 
-You should be able to find it under github.com/IQSS
-
-You're welcome to open issues on the GitHub repo... and right now, during this talk, please feel free to raise your hand and stop me.
+This entire talk, including the code, has already been posted to GitHub. You should be able to find it under github.com/IQSS and you should feel free to open issues.
 
 ---
 
-# Dataverse
+# Classic MVC
 
-Dataverse is an open source web application for sharing, citing, analyzing, and preserving research data.
-
-Began life (under the name Dataverse) as a Java EE 5 application in 2006.
-
-
-Dataverse 4.0 ( https://github.com/IQSS/dataverse ) is a complete rewrite:
-
-- more flexible architecture
-- focus on usability
-- ... much more! (See http://dataverse.org for details.)
-
-???
-
-So! Why... why am I talking about the command pattern at all?
-
-You see, I work on an open source project called Dataverse that began life in 2006 (under that name anyway) as a Java EE 5 application.
-
-About a year ago, shortly after last year's JavaOne, we started talking about the possibility of re-writing Dataverse from the ground up.
-
-Our users were finding the application very useful but they wanted more flexibility in a variety of areas.
-
----
-
-# Dataverse 4.0: more granular permissions 
-
-Command pattern examples:
-
-- CreateDatasetCommand
-- PublishDatasetCommand
-- DeleteDataFileCommand
-- ...
-
-Idea to use command pattern came from one of our architects:
-
-Michael Bar-Sinai ([@michbarsinai](https://twitter.com/michbarsinai))  
-http://www.iq.harvard.edu/people/michael-bar-sinai  
-http://mbarsinai.com/blog
-
-???
-
-One of the main areas where we wanted more flexibility was in our system for permissions.
-
-A very bright colleague of mine, Michael Bar-Sinai, came up with the initial design, which is based on the command pattern.
-
-Here we see a few example commands:
-
-- CreateDatasetCommand
-- PublishDatasetCommand
-- DeleteDataFileCommand
-- and so on
-
----
-
-# The Command Pattern
-
-<!-- <blockquote class="rectangle-speech-border"> -->
-<img src="images/in-command-now.jpg" width="600"/>
-<blockquote class="example-obtuse">
-  <p style="font-size:1.7em;">You are in command now, Admiral Piett.</p>
-</blockquote>
-
-???
-
-Lemme back up minute though.
-
-"Command pattern" is in the title of this talk so I know you've *heard* of it, but how many people here have actually used the command pattern?
-
----
-
-# Learning the Command Pattern
+- Model: database
+- View: what you see
+- Controller: manipulates the model
 
 <img src="images/gof.png" width="300"/>
 <img src="images/hfdp.jpg" width="300"/>
 
 ???
 
-I'm relatively new to the command pattern myself. My first introduction to it was working with the code that Michael put in our app but I found it very useful to read through the command pattern chapter in Head First Design Patterns. That's this book on the right.
+In classic MVC, the model is commonly a database, the view is what you see, and the controller is manipulates the model. 
 
-In that book you'll see the client is a customer at a diner, who makes an order, which is the command, that goes to the waitress, who is the "invoker", who gives it to the cook, who is the "receiver". 
+Of course, patterns such as this gained popularity after the Gang of Four book was published in 1994. Another book we recommend, especially for Java developers, is Head First Design Patterns.
+
+---
+
+# MVC in Java EE
+
+- Model: persistence
+- View: JSF
+- Controller: service beans
+
+???
+
+Let's move on the MVC in Java EE. The standardized view is JSF and the the controller is typically made up of service beans.
+
+---
+
+class: bigfont
+
+# Waitresses and Cooks
+
+<img src="images/hfdp.jpg" width="400" align="right"/>
+
+- Customer
+- Order
+- Waitress
+- Cook
+
+???
+
+In Head First Design Patterns you'll see the client is a customer at a diner, who makes an order, which is the command, that goes to the waitress, who is the "invoker", who gives it to the cook, who is the "receiver". 
 
 Then they talk about a remote control with buttons you can program, all using the command pattern. It's very well done. It's a great book.
 
-And of course, you can't talk about a design pattern without mentioning the Gang Of Four book here on the left. I haven't read it but I've heard good things.
+---
+
+# You Are In Command Now
+
+(Admiral Piett)
+
+<img src="images/in-command-now.jpg" width="600"/>
+
+???
+
+I don't wanna talk about cooks and waitresses so I'm going to give you some examples from Star Wars.
+
+Let's say you're Darth Vader and you've got a whole empire to command. You're forever giving these guys commands.
 
 ---
 
@@ -257,10 +231,6 @@ class: bigfont
 1. check identification
 
 ???
-
-I don't wanna talk about cooks and waitresses so I'm going to give you some examples from Star Wars.
-
-Let's say you're Darth Vader and you've got an army of troops. You're forever giving these guys commands.
 
 So you start out by telling them:
 
@@ -502,7 +472,31 @@ Objects in play: Client, Command, Receiver, and Invoker
 
 ???
 
-I wonder what Darth Vader would have to say about this.
+...
+
+---
+
+# Code as Data
+
+- Macros, as sequence of commands
+- ignoring (permissions/disable)
+- logging
+- testability
+- execute on a different thread
+    - Add serialization to that....
+- When commands can invoke commands - we get full recursive-ness
+
+???
+
+So, really - we take a block of code and its parameters, an use it as a data (think of storing commands in a Map, where the key is an event id - for triggered command execution). What's another version of this? Right, lambda expressions. This is fundamentally different from the traditional procedural Code/Data dichotomy. This opens up lots of opportunities:
+
+- Macros, as sequence of commands
+- ignoring (permissions/disable)
+- logging
+- testability
+- execute on a different thread
+    - Add serialization to that....
+- When commands can invoke commands - we get full recursive-ness
 
 ---
 
@@ -516,9 +510,7 @@ I wonder what Darth Vader would have to say about this.
 
 ???
 
-He may say something like, "You may dispense with the pleasantries, Commander. I'm here to put you back on schedule."
-
-After all, Darth Vader doesn't care about all this. He just wants you to build the Death Star!
+Of course, Darth Vader doesn't care about all this. He just wants you to build the Death Star! On schedule!
 
 ---
 
@@ -567,6 +559,31 @@ He doesn't seem to use the term "invoker" but to him it's the "command server". 
 
 ---
 
+# Merging Java EE and Commands
+
+We need to push the server context to a POJO.
+
+???
+
+---
+
+# Dataverse 4.0: more granular permissions 
+
+Command pattern examples:
+
+- CreateDatasetCommand
+- PublishDatasetCommand
+- DeleteDataFileCommand
+- ...
+
+???
+
+Back to Dataverse, which again is the app we work on.
+
+One of the main areas where we wanted more flexibility was in our system for permissions.
+
+---
+
 # Dataverse Commands
 
 <img src="images/dataverse-classes.png" width="500" align="right"/>
@@ -577,8 +594,6 @@ He doesn't seem to use the term "invoker" but to him it's the "command server". 
 
 ???
 
-So! Let's get back to Dataverse. Finally we see how an example command relates to other parts of the system.
-
 - adjusted and simplified from actual code
 - EjbDataverseEngine is the invoker
 - service beans are the receivers (nearly all available in CommandContext)
@@ -587,8 +602,35 @@ So! Let's get back to Dataverse. Finally we see how an example command relates t
 
 ---
 
+# More on Dataverse Commands
+
+- Permission annotations
+    - Dealing with inheritance
+- Permission sets as bit fields.
+- Testability (demo junit code)
+- Resuability (demo backing bean/api code)
+- Decorators
+- Decorator collides with annotations, so we use static/dynamic combo
+
+---
+
+# Lean Beans Design Pattern
+
+- business logic goes in commands
+- service beans do basic CRUD
+
+---
+
+# Can we replace beans with commands?
+
+- Not entirely, due to dependency injections etc.
+- We can replace everything except `EntityManager`s, JMS queue pools etc.
+
+---
+
 # More on the command pattern
 
+- https://github.com/IQSS/dataverse
 - https://github.com/bethrobson/Head-First-Design-Patterns/tree/master/src/headfirst/designpatterns/command (Java 8!)
 - http://gameprogrammingpatterns.com/command.html
 - http://www.vincehuston.org/dp/command.html
