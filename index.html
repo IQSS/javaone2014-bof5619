@@ -179,7 +179,7 @@ class: bigfont
 2. MVC, Java EE MVC, Classic command
 3. Command Adaptation for modern Java EE
   * With real-world examples!
-4. The Lean Beans Design Pattern
+4. The Lean Bean Design Pattern
 
 .regularfont[
 Slides and code:
@@ -191,15 +191,13 @@ https://github.com/IQSS/javaone2014-bof5619
 
 Here's the agenda for this talk.
 
-First off, don't let the little crimson logo confuse you. We will not be talking about is not an academic exercise, but rather applying the command pattern to a real-world application called "Dataverse". There are several installations of it, the one at Harvard housing the world's largest collection of social datasets (about 749 thousand files for 54 thousand datasets). You can fork it on GitHub.
+First off, don't let the little crimson logo confuse you. We will not be talking about an academic exercise, but rather applying the command pattern to a real-world application called "Dataverse". There are several installations of it, the one at Harvard housing the world's largest collection of social science datasets (about 749 thousand files for 54 thousand datasets). It's open source and the code is on GitHub.
 
 First, we'll talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
 
-Then, we'll present the adjustments we've made to the command pattern to adapt it to Java EE, modern programming and a permission-based system.
+Then, we'll present the adjustments we've made to the command pattern to adapt it to Java EE, modern programming, and a permission system we came up with in Dataverse.
 
-By way of example, we're going to show how we adjusted the command pattern our Dataverse application.
-
-Finally, we'll generalize the lessons learned and explain why we refer to the pattern as the "Lean Beans Design Pattern."
+Finally, we'll generalize the lessons learned and explain why we refer to the pattern as the "Lean Bean Design Pattern."
 
 This entire talk, including the code, has already been posted to GitHub. You should be able to find it under github.com/IQSS and you should feel free to open issues.
 
@@ -220,16 +218,19 @@ Goal: <strong>Separate data from its representation</strong>
  -->
 ???
 
-In classic MVC:
+In classic Model View Controller or "MVC":
+
   * the model consists of business objects - pure concepts implemented in your language of choice, 
   * the view is what the user sees and interacts with, 
   * and the controller is manipulates the model. 
 
 MVC separates the user interactions from the data. This proved to be a clean way that also facilitates reuse.
 
-This pattern was developed by Trygve Reenskaug, while visiting Xerox PARC in '79 working on graphical user interfaces using SmallTalk. It's interesting to note that it is _not_ part of the GoF patterns.
+This pattern was developed by Trygve Reenskaug, while visiting Xerox PARC in '79 working on graphical user interfaces using SmallTalk. It's interesting to note that it is _not_ part of the GoF patterns, which we'll get to in a bit.
 
 The main benefit here is that the model can be viewed in many ways without cluttering it and views can possibly be used to display different models.
+
+In the web world, MVC has taken on a life of its own the differs significantly from the Smalltalk implementation. The Action-Domain-Responder pattern is "an attempt to refine MVC for a web-specific environment" according to https://github.com/pmjones/mvc-refinement
 
 ---
 # The Command Pattern
@@ -275,7 +276,9 @@ class: bigfont
 
 ???
 
-In Head First Design Patterns you'll see the client is a customer at a diner, who makes an order, which is the command, that goes to the waitress, who is the "invoker", who gives it to the cook, who is the "receiver". 
+The command pattern is covered in a great book called Head First Design Patterns.
+
+The client is a customer at a diner, who makes an order, which is the command, that goes to the waitress, who is the "invoker", who gives it to the cook, who is the "receiver". 
 
 Then they talk about a remote control with buttons you can program, all using the command pattern.
 
@@ -350,7 +353,7 @@ layout: true
 ```java
 public class CheckIdCommand implements Command {
 
-    private Suspect suspect;
+    private Suspect suspect; // receiver
 
     public CheckIdCommand(Suspect suspect) {
         this.suspect = suspect;
@@ -403,9 +406,9 @@ In the command pattern the client is the piece ties it everything together. We'l
 
 Before we instantiate our CheckIdCommand, we need to decide which Suspect we're going to bind it to. Whose id are we going to check? A Jawa? A Tuskan Raider? No... we've got Obiwan here, so he's what gets passed in when we create the command. Obiwan is the "receiver" of the command.
 
-And who's going to execute the CheckIdCommand? The stormtrooper. 
+And who's going to execute the CheckIdCommand? The stormtrooper. The invoker.
 
-Of course, when we call execute that stupid JediMindTrick exception gets thrown so we just say, "We don't need to see his identification." 
+Of course, when we call execute that stupid JediMindTrick exception gets thrown so the stormtrooper just agrees, "We don't need to see his identification... move along." 
 
 ---
 
@@ -455,7 +458,7 @@ public class StormTrooper {
 
 ???
 
-This adheres to the classic 1994 book implementation - note the statefulness, where you first set a field and then use another call to request the invoker to invoke the command.
+This adheres to the classic 1994 Gang of Four implementation - note the statefulness, where you first set a field and then use another call to request the invoker to invoke the command.
 
 ---
 
@@ -483,6 +486,10 @@ public class Jedi extends Suspect {
 }
 ```
 
+???
+
+Here's the Suspect class, which is the receiver. Here's where we see that the Jedi class extends the Suspect classes and overrides the getId method to throw that Jedi mind trick RuntimeException.
+
 ---
 
 # Another Command Example
@@ -507,6 +514,10 @@ public class CheckShipCommand implements Command {
 }
 ```
 
+???
+
+For completeness, here's the CheckShipCommand I mentioned. It's very similar to the other command in that it implements the execute method.
+
 ---
 
 <h1>Star Wars Class Diagram</h1>
@@ -516,6 +527,8 @@ public class CheckShipCommand implements Command {
 ]
 
 ???
+
+So, to review, the client creates a command that's bound to a receiver (a suspect such as Obiwan Kenobe). Then the client instantiates a stormtrooper and sets its command to the one that was just created. Finally, the stormtrooper calls its execute method.
 
 ---
 layout: true
@@ -616,9 +629,9 @@ Balancing clean design and practicality.
 
 ???
 
-Let's move on the MVC in Java EE. Not as clean, but handles persistence and handles the complexities of a GUI over stateless protocol such as HTTP.
+Let's move on to MVC in Java EE. Not as clean, but handles persistence and handles the complexities of a GUI over stateless protocol such as HTTP.
 
-We've drown the lines between the boxes, other people would probably place them differently.
+We've drawn the lines between the boxes, other people would probably place them differently.
 
 Also note that some annotations, such as the validation ones, go against this separation by adding user interface texts to the model objects (e.g `@NotBlank(message = "Please enter an identifier for your dataset.")`)
 
@@ -637,9 +650,11 @@ Balancing clean design and practicality.
 <div style="position: absolute; top:180px; left: 230px">/</div>
 
 ---
+
 class: middle center
 
-<img src="images/disturbance.png" />
+<img src="images/disturbance.png" width="350" />
+
 ---
 <!--
 Michael edited up to here
@@ -663,7 +678,7 @@ http://www.theserverside.com/news/1369776/Free-Book-EJB-Design-Patterns
 
 ???
 
-So! Is my group the first to apply the command pattern to Java EE? Of course not.
+So! Is our group the first to apply the command pattern to Java EE? Of course not.
 
 In 2002 (12 years ago!) Floyd Marinescu wrote a book called "EJB Design Patterns" that said,
 
@@ -750,7 +765,7 @@ One of the main areas where we wanted more flexibility was in our system for per
 
 ---
 
-# Lean Beans Design Pattern
+# Lean Bean Design Pattern
 - traditional JavaEE uses service beans to modify models
 - We use commands
 - &rarr; Can we get rid of service beans? would that be wise?
