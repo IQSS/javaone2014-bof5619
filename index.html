@@ -178,7 +178,7 @@ class: bigfont
 
 # Agenda
 
-1. Intro
+1. Intro, real world challenges
 2. MVC, Java EE MVC, Classic command
 3. Command Adaptation for modern Java EE
   * With real-world examples!
@@ -194,19 +194,38 @@ https://github.com/IQSS/javaone2014-bof5619
 
 Here's the agenda for this talk.
 
-First off, we come from academia but we're here to talk about how we applied the command pattern to a real-world application.
+First off, we come from academia but we're here to talk about how we applied the command pattern to a real-world Java EE application called "Dataverse".
 
-It's called "Dataverse" and the installation at Harvard hosts the world's largest collection of social science datasets (about 749 thousand files across 54 thousand datasets).
-
-The code is on GitHub and there are a number of installations.
-
-First, we'll talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
+We'll talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
 
 Then, we'll present the adjustments we've made to the command pattern to adapt it to Java EE, modern programming, and a permission system we came up with for Dataverse.
 
 Finally, we'll generalize the lessons learned and explain why we refer to the pattern as the "Lean Bean Design Pattern."
 
 This entire talk, including the code, has already been posted to GitHub. You should be able to find it under github.com/IQSS and you should feel free to open issues.
+
+---
+
+# Real world challenges
+
+Dataverse 4.0 requirements
+
+* Maximal code re-use between the API and the GUI
+* Host sensitive data with granular permissions
+
+<img src="images/dvprojlogo.jpg" alt="" width="300">
+
+https://github.com/IQSS/dataverse
+
+???
+
+Let's talk for a moment about two challenges we've tackled in Dataverse, our Java EE 7 application.
+
+First, we're trying to maximize the amount of code re-use between the web interface and the RESTful API. We want the same code path to be traveled no matter how you interact with the application. Ideally, everything you can do in the GUI is also possible via the API.
+
+Second, we have a focus on security. Our users are interested in hosting sensitive datasets in our application, so we need tight security and granular permissions.
+
+In the end, we chose the command pattern (with some adjustments) to solve both of these problems (code re-use and security), but before we dive into the command pattern, let's first talk about MVC.
 
 ---
 
@@ -231,15 +250,15 @@ In classic Model View Controller or "MVC":
   * the view is what the user sees
   * and the controller manipulates the model. 
 
-MVC separates the user interactions from the data and facilitates code reuse.
+MVC separates the user interactions from the data and it facilitates code reuse.
 
-This pattern was developed by Trygve Reenskaug, while visiting Xerox PARC in '79 working on graphical user interfaces in SmallTalk. It's interesting to note that MVC is _not_ one of the Gang of Four patterns, though it is mentioned in that book, which we'll get to in a bit.
+This pattern was developed by Trygve Reenskaug ("Treegvee Rainska"), while visiting Xerox PARC in 1979 and working on graphical user interfaces in SmallTalk. It's interesting to note that MVC is _not_ one of the Gang of Four patterns, though it is mentioned in that book, which we'll get to in a bit.
 
-The main benefit here is that the model can be viewed in many ways without cluttering it. There's a nice separation of concerns.
+The main benefit here is that the model can be viewed in many ways. There's a nice separation of concerns.
 
-In the web world, MVC has taken on a life of its own. More on this in a bit. 
+Here we see a button on the view. When users click it, the controller manipulates the model. 
 
-(MVC for the web often differs significantly from the Smalltalk implementation. The Action-Domain-Responder pattern is "an attempt to refine MVC for a web-specific environment" according to https://github.com/pmjones/mvc-refinement .)
+(In the web world, MVC has taken on a life of its own.  MVC for the web often differs significantly from the Smalltalk implementation. The Action-Domain-Responder pattern is "an attempt to refine MVC for a web-specific environment" according to https://github.com/pmjones/mvc-refinement .)
 
 ---
 # The Command Pattern
@@ -252,15 +271,16 @@ Goal: <strong>Capture operations on the model as data</strong>
 .center[
   <img src="uml/mvcc.svg" width="450"/>
 ]
+
 ???
 
-Presented in the classic GoF book, this pattern captures modifications to the model objects as data.
+The command pattern, presented in the classic Gang of Four book, captures modifications to the model objects as data.
 
 A request is a first-class object.
 
 When a button is clicked, we see a command being instantiated and executed.
 
-There's an extra step, and extra layer of abstraction here.
+There's an extra step, and extra layer of abstraction here. Now there's a command in here, between the controller and the model.
 
 ---
 
@@ -289,10 +309,10 @@ Here's the official definition of the command pattern from "Design Patterns",  t
 
 There are four objects in play:
 
-- Client
-- Command
-- Receiver
-- Invoker
+- the "client"
+- the "command"
+- the "receiver" and
+- the "invoker"
 
 ---
 
@@ -309,11 +329,11 @@ class: bigfont
 
 ???
 
-The Gang of Four book gives examples in C++ of clicking an button in a GUI to open a file.
+The Gang of Four book gives examples in C++. You click a button in a GUI to open a file.
 
 A more Java-oriented book is Head First Design Patterns, which also covers the command pattern. 
 
-The client is a customer at a diner, who makes an order, which is the command, that goes to the waitress, who is the "invoker", who gives it to the cook, who is the "receiver". 
+In *that* book, the client is a customer at a diner, who makes an order, which is the command, that goes to the waitress, who is the "invoker", who gives it to the cook, who is the "receiver". 
 
 The book also has you program a remote control with the command pattern. It's very well done.
 
@@ -329,7 +349,7 @@ The book also has you program a remote control with the command pattern. It's ve
 
 I don't wanna talk about cooks and waitresses and remote controls so I'm going to give you some examples from Star Wars.
 
-Darth Vader has a whole empire to command. He's forever giving these guys commands.
+You see, Darth Vader has a whole empire to command. He's forever giving these guys commands.
 
 ---
 
@@ -368,13 +388,13 @@ public interface Command {
 
 ???
 
-Let's first look at a Command object. Notice that it's an interface. Individual commands will implement this interface.
-
-(Technically, you don't have to use the `interface` keyword; It can be any class.)
+Let's first look at a Command object. Notice that it's an interface. Individual commands (concrete commands) will implement this interface.
 
 Notice that the command interface is very simple. It only requires that you implement a single method, which is often called `execute()`.
 
-That's some of the power of the dark side... er, power of the command pattern... that no matter what the command is called, the complexity is hidden behind a consistently named method such as "execute".
+That's some of the power of the dark s... er, power of the command pattern... that no matter what the command is called, the *complexity* is hidden behind a consistently named method such as "execute".
+
+(Technically, you don't have to use the `interface` keyword; It can be any class.)
 
 ---
 layout: true
@@ -411,7 +431,7 @@ public class CheckIdCommand implements Command {
 
 Here's an example of a `CheckIdCommand`.
 
-We want suspects to give us their identification.
+We want suspects (people with droids) to give us their identification.
 
 Notice that a suspect gets passed into the constructor of the command. In this case the suspect is Obiwan Kenobe so there's the danger of a JediMindTrick exception being thrown.
 
@@ -663,7 +683,7 @@ For Dataverse 4.0, a Java EE 7 app which needs to support sensitive data and a f
 * Maximal code re-use between the API and the UI
 * By-design, permission-based security.
 
-.center[ <img src="images/dvn4.png" alt="">]
+.center[ <img src="images/dvprojlogo.jpg" alt="">]
 
 
 With some extensions and infrastructure (shown later) - we got just that.
