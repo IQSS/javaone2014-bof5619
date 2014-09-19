@@ -1,0 +1,26 @@
+.dimmed {
+  color: #AAA;
+}
+
+.btw {
+  font-size: .65em;
+  color: #444;
+}
+.bottom-remark {
+  font-size: 0.5em;
+  color: gray;
+  position: absolute;
+  bottom: 1em;
+  left: 0;
+  right: 0;
+  padding: 1em;
+}
+
+.hljs-keyword {
+  color: blue;
+}
+
+.remark-code-line-highlighted {
+  background-color: #FFF;
+
+}

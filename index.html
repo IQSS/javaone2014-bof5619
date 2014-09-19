@@ -14,7 +14,12 @@
         font-family: 'Yanone Kaffeesatz';
         font-weight: normal;
       }
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-code, .remark-inline-code { font-family: Menlo, 'Ubuntu Mono', Courier, monospace; }
+
+      .remark-inline-code {
+        background-color: #EEE;
+        font-size: 0.8em;
+      }
       /* Two-column layout */
       /*
       .left-column {
@@ -41,22 +46,9 @@
       .regularfont {
         font-size: .7em;
       }
-      .btw {
-        font-size: .65em;
-        color: #444;
-      }
   
       .deleted {
         text-decoration: line-through;
-      }
-
-      .bottom-remark {
-        font-size: 0.5em;
-        color: gray;
-        position: absolute;
-        bottom: 1em;
-        left: 0;
-        right: 0;
       }
 
       .slide-badge {
@@ -144,6 +136,7 @@
 
 
     </style>
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <textarea id="source">
@@ -761,10 +754,6 @@ class: middle center
 You might feel a great disturbance in the source.
 
 ---
-<!--
-Michael edited up to here
--->
-
 
 # Nothing New Under The Sun
 
@@ -796,6 +785,150 @@ He doesn't seem to use the term "invoker" but to him it's the "command server". 
 - "Applied to EJB, the Command Server class is a stateless session bean that accepts a command as a parameter and executes it locally."
 
 ---
+
+# Command, Adapted
+
+We have adapted the Command Pattern to support permissions and execute in a Java EE environment
+
+```java
+public interface Command<R> {
+
+*  public R execute( CommandContext ctxt ) throws CommandException;
+  
+  public Map<String,DvObject> getAffectedDvObjects();
+    
+  public User getUser();
+  
+}
+
+```
+* Modern touches
+  * Generics
+  * `execute` is an expression (not a statement)
+  * Command objects can be (and mostly are) immutable
+* The `CommandContext` parameter is used to allow the command access to server resources
+.bottom-remark[
+Real code, comments removed.
+]
+???
+
+Contrast CommandContext and dependency injections.
+
+---
+
+# Command, Adapted
+
+We have adapted the Command Pattern to support permissions and execute in a Java EE environment
+
+```java
+public interface Command<R> {
+
+  public R execute( CommandContext ctxt ) throws CommandException;
+  
+*  public Map<String,DvObject> getAffectedDvObjects();
+    
+*  public User getUser();
+  
+}
+
+```
+* A command acts on one or more receivers of type `DvObject`
+  * Think of these as "files" and "directories".
+* A command must be issued by a `User`
+.bottom-remark[
+Real code, comments removed.
+]
+
+???
+User - represents the user issuing the command
+DvObject - For this discussion, safe to assume it's either a "file" or a "folder"
+Contrast the CommandContext with dependency injection (no flame wars!)
+
+---
+
+# Command, Adapted
+
+We have adapted the Command Pattern to support permissions and execute in a Java EE environment
+
+```java
+public interface Command<R> {
+
+*  public R execute( CommandContext ctxt ) throws CommandException;
+  
+  public Map<String,DvObject> getAffectedDvObjects();
+    
+  public User getUser();
+  
+}
+
+```
+`CommandException` has 2 sub-classes:
+* `IllegalCommandException` - Command makes no sense
+  * e.g. move a parent to its descendant
+* `PermissionException` - Issuing user doesn't get to perform this operation over the affected receivers
+* `CommandExecutionException` - Oops, our bad
+
+.bottom-remark[
+Real code, comments removed.
+]
+
+???
+CommandExecutionException - So we just with this to System.out... some sysadmin will pick it up later. For sure.
+
+---
+
+
+# Command Invoker, Adapted
+
+We called the invoker *Engine*, as the term is more familiar.
+
+```java
+public interface DataverseEngine {
+
+  public <R> R submit( Command<R> aCommand ) throws CommandException;
+
+}
+```
+
+* Modernized invoker - replaced the `setCommand`,`execute`,`getResult` sequence with a single method call.
+* Type parameter capture allows for type-safe execution of any command.
+
+.bottom-remark[
+Real code, comments removed.
+]
+
+???
+
+---
+
+# Command Engine in the Wild
+
+Creating a Dataset from the API.
+
+```java
+Dataset ds = ... // get dataset here
+Users u = ... // get the user here
+try {
+    Dataset managedDs = 
+*          engineSvc.submit( new CreateDatasetCommand(ds, u) );
+    return okResponse( "created dataset " + managedDs );
+    
+} catch (CommandException ex) {
+    // Handle error...
+    return errorResponse(Status.INTERNAL_SERVER_ERROR, 
+        "Error executing command:" + ex.getMessage() );
+}
+```
+
+.bottom-remark[
+Code adapted for slide.
+Original file at: https://github.com/IQSS/dataverse/blob/master/src/main/java/edu/harvard/iq/dataverse/api/Dataverses.java#L123
+]
+
+---
+<!--
+Michael edited up to here
+-->
 
 # Dataverse Commands
 
