@@ -171,7 +171,7 @@ class: bigfont
 
 # Agenda
 
-1. Intro
+1. Intro, real world challenges
 2. MVC, Java EE MVC, Classic command
 3. Command Adaptation for modern Java EE
   * With real-world examples!
@@ -190,19 +190,38 @@ https://github.com/IQSS/javaone2014-bof5619
 
 Here's the agenda for this talk.
 
-First off, we come from academia but we're here to talk about how we applied the command pattern to a real-world application.
+First off, we come from academia but we're here to talk about how we applied the command pattern to a real-world Java EE application called "Dataverse".
 
-It's called "Dataverse" and the installation at Harvard hosts the world's largest collection of social science datasets (about 749 thousand files across 54 thousand datasets).
-
-The code is on GitHub and there are a number of installations.
-
-First, we'll talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
+We'll talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
 
 Then, we'll present the adjustments we've made to the command pattern to adapt it to Java EE, modern programming, and a permission system we came up with for Dataverse.
 
 Finally, we'll generalize the lessons learned and explain why we refer to the pattern as the "Lean Bean Design Pattern."
 
-This entire talk, including the code, has already been posted to GitHub. You should be able to find it under github.com/IQSS and you should feel free to open issues.
+This entire talk, including the code, has already been posted to GitHub. You can find it under github.com/IQSS and you should feel free to open issues.
+
+---
+
+# Real world challenges
+
+Dataverse 4.0 requirements
+
+* Maximal code re-use between the API and the GUI
+* Host sensitive data with granular permissions
+
+<img src="images/dvprojlogo.jpg" alt="" width="300">
+
+https://github.com/IQSS/dataverse
+
+???
+
+Let's talk for a moment about two challenges we've tackled in Dataverse, our Java EE 7 application.
+
+First, we're trying to maximize the amount of code re-use between the web interface and the RESTful API. We want the same code path to be traveled no matter how you interact with the application. Ideally, everything you can do in the GUI is also possible via the API (and vice versa).
+
+Second, we have a focus on security. Our users are interested in hosting sensitive datasets in our application, so we need tight security and granular permissions.
+
+In the end, we chose the command pattern (with some adjustments) to solve both of these problems (code re-use and security), but before we dive into the command pattern, let's first talk about MVC.
 
 ---
 
@@ -227,15 +246,15 @@ In classic Model View Controller or "MVC":
   * the view is what the user sees
   * and the controller manipulates the model. 
 
-MVC separates the user interactions from the data and facilitates code reuse.
+MVC separates the user interactions from the data and it facilitates code reuse.
 
-This pattern was developed by Trygve Reenskaug, while visiting Xerox PARC in '79 working on graphical user interfaces in SmallTalk. It's interesting to note that MVC is _not_ one of the Gang of Four patterns, though it is mentioned in that book, which we'll get to in a bit.
+This pattern was developed by Trygve Reenskaug ("Treegvee Rainska"), while visiting Xerox PARC in 1979 and working on graphical user interfaces in SmallTalk. It's interesting to note that MVC is _not_ one of the Gang of Four patterns, though it is mentioned in that book, which we'll get to in a bit.
 
-The main benefit here is that the model can be viewed in many ways without cluttering it. There's a nice separation of concerns.
+The main benefit here is that the model can be viewed in many ways. There's a nice separation of concerns.
 
-In the web world, MVC has taken on a life of its own. More on this in a bit. 
+Here we see a button on the view. When users click it, the controller manipulates the model. 
 
-(MVC for the web often differs significantly from the Smalltalk implementation. The Action-Domain-Responder pattern is "an attempt to refine MVC for a web-specific environment" according to https://github.com/pmjones/mvc-refinement .)
+(In the web world, MVC has taken on a life of its own.  MVC for the web often differs significantly from the Smalltalk implementation. The Action-Domain-Responder pattern is "an attempt to refine MVC for a web-specific environment" according to https://github.com/pmjones/mvc-refinement .)
 
 ---
 # The Command Pattern
@@ -248,15 +267,16 @@ Goal: <strong>Capture operations on the model as data</strong>
 .center[
   <img src="uml/mvcc.svg" width="450"/>
 ]
+
 ???
 
-Presented in the classic GoF book, this pattern captures modifications to the model objects as data.
+The command pattern, presented in the classic Gang of Four book, captures modifications to the model objects as data.
 
 A request is a first-class object.
 
 When a button is clicked, we see a command being instantiated and executed.
 
-There's an extra step, and extra layer of abstraction here.
+There's an extra step, and extra layer of abstraction here. Now there's a command in here, between the controller and the model.
 
 ---
 
@@ -285,10 +305,10 @@ Here's the official definition of the command pattern from "Design Patterns",  t
 
 There are four objects in play:
 
-- Client
-- Command
-- Receiver
-- Invoker
+- the "client"
+- the "command"
+- the "receiver" and
+- the "invoker"
 
 ---
 
@@ -305,11 +325,11 @@ class: bigfont
 
 ???
 
-The Gang of Four book gives examples in C++ of clicking an button in a GUI to open a file.
+The Gang of Four book gives examples in C++. You click a button in a GUI to open a file.
 
 A more Java-oriented book is Head First Design Patterns, which also covers the command pattern. 
 
-The client is a customer at a diner, who makes an order, which is the command, that goes to the waitress, who is the "invoker", who gives it to the cook, who is the "receiver". 
+In *that* book, the client is a customer at a diner, who makes an order, which is the command, that goes to the waitress, who is the "invoker", who gives it to the cook, who is the "receiver". 
 
 The book also has you program a remote control with the command pattern. It's very well done.
 
@@ -325,7 +345,7 @@ The book also has you program a remote control with the command pattern. It's ve
 
 I don't wanna talk about cooks and waitresses and remote controls so I'm going to give you some examples from Star Wars.
 
-Darth Vader has a whole empire to command. He's forever giving these guys commands.
+You see, Darth Vader has a whole empire to command. He's forever giving these guys commands.
 
 ---
 
@@ -342,8 +362,8 @@ class: bigfont
 
 So let's give some commands. Here's an easy one. You tell your guys...
 
-- look around for some droids and
-- for the people that are with the droids... check their identification
+- look around for *droids* and
+- for the *people* that are with the droids... check their identification
 
 How hard could this be?
 
@@ -364,13 +384,13 @@ public interface Command {
 
 ???
 
-Let's first look at a Command object. Notice that it's an interface. Individual commands will implement this interface.
+Let's first look at a Command object. Notice that it's an interface. Individual commands (concrete commands) will implement this interface.
+
+Now, the command interface is very simple. It only requires that you implement a single method, which is often called `execute()`.
+
+That's some of the power of the dark s... er, power of the command pattern... that no matter what the command is called, the *complexity* is hidden behind a consistently named method such as "execute".
 
 (Technically, you don't have to use the `interface` keyword; It can be any class.)
-
-Notice that the command interface is very simple. It only requires that you implement a single method, which is often called `execute()`.
-
-That's some of the power of the dark side... er, power of the command pattern... that no matter what the command is called, the complexity is hidden behind a consistently named method such as "execute".
 
 ---
 layout: true
@@ -407,13 +427,13 @@ public class CheckIdCommand implements Command {
 
 Here's an example of a `CheckIdCommand`.
 
-We want suspects to give us their identification.
+We want suspects (people with droids) to give us their identification.
 
-Notice that a suspect gets passed into the constructor of the command. In this case the suspect is Obiwan Kenobe so there's the danger of a JediMindTrick exception being thrown.
+Notice that a suspect gets passed into the constructor of the command. This is the "receiver" of the CheckIdCommand. In this case the suspect is Obiwan Kenobe so there's the danger of a JediMindTrick exception being thrown.
 
 Perhaps unwisely, if *any* exception is thrown, the stormtrooper simply says, "Move along, move along."
 
-That's all contained in the execute() method, which again is required by the command interface. All commands have an execute() method.
+That's all contained in the execute() method, which again is required by the command interface. All commands implement an execute() method.
 
 ---
 
@@ -437,11 +457,11 @@ stormTrooper.setCommand( checkIdCommand ); // invoker
 
 In the command pattern the client is the piece ties it everything together. We'll see all of the components in play.
 
-Before we instantiate our CheckIdCommand, we need to decide which Suspect we're going to bind it to. Whose id are we going to check? A Jawa? A Tuskan Raider? No... we've got Obiwan here, so he's what gets passed in when we create the command. Obiwan is the "receiver" of the command.
+Before we instantiate our CheckIdCommand, we need to decide which Suspect we're going to bind it to. Whose id are we going to check? A Jawa? A Tuskan Raider? No... we've got Obiwan here, so he's what gets passed in when we create the command. Again, Obiwan is the "receiver" of the command.
 
-And who's going to execute the CheckIdCommand? The stormtrooper. The invoker.
+And who's going to execute the CheckIdCommand? The stormtrooper. The "invoker".
 
-Of course, when we call `execute` that annoying JediMindTrick exception gets thrown so the stormtrooper just agrees, "We don't need to see his identification... move along." 
+Of course, when we call `execute` on the stormtrooper, that annoying JediMindTrick exception gets thrown so we see, "We don't need to see his identification... move along." 
 
 ---
 
@@ -472,7 +492,7 @@ We can take the same stormtrooper (TX 412) and load him up with different comman
 
 We already saw how he was checking IDs at Mos Eisley.
 
-Now the same stormtrooper at the Death Star on the Millenium Falcon executing the `CheckShipCommand`.
+Now the same stormtrooper at the Death Star in the Millenium Falcon executing the `CheckShipCommand`.
 
 He says no one is on board.
 
@@ -505,7 +525,7 @@ public class StormTrooper {
 
 Here we see the StormTrooper class, the invoker.
 
-This adheres to the classic 1994 Gang of Four implementation - note the statefulness, where you first set a field and then use another call to request the invoker to invoke the command.
+This adheres to the classic 1994 Gang of Four implementation - note the statefulness, where you first set a Command field and then use another call to request the invoker to execute the command.
 
 ---
 
@@ -535,7 +555,7 @@ public class Jedi extends Suspect {
 
 ???
 
-Here's the Suspect class, which is the receiver. Here's where we see that the Jedi class extends the Suspect classes and overrides the getId method to throw that Jedi mind trick RuntimeException.
+Here's the Suspect class, which is the receiver in our CheckIdCommand. Here's where we see that the Jedi class extends the Suspect classes and overrides the getId method to throw that Jedi mind trick RuntimeException.
 
 ---
 
@@ -563,7 +583,7 @@ public class CheckShipCommand implements Command {
 
 ???
 
-For completeness, here's the CheckShipCommand I mentioned. It's very similar to the other command in that it implements the execute method.
+For completeness, here's the CheckShipCommand I mentioned. It's very similar to the other command in that it implements the execute method. In this case the reciever of the command is a ship.
 
 ---
 
@@ -575,7 +595,7 @@ For completeness, here's the CheckShipCommand I mentioned. It's very similar to 
 
 ???
 
-So, to review, the client creates a command that's bound to a receiver (a suspect such as Obiwan Kenobe). Then the client instantiates a stormtrooper and sets its command to the one that was just created (the CheckIdCommand). Finally, the stormtrooper calls its execute method without really thinking hard about which command he was given.
+So, to review, the client creates a command that's bound to a receiver (a suspect such as Obiwan Kenobe). Then the client instantiates a stormtrooper and sets that stormtrooper's command to the one that was just created (the CheckIdCommand). Finally, we call the execute method on the stormtrooper to run the command he was given.
 
 ---
 layout: true
@@ -620,19 +640,19 @@ We can do all this (and more!) with commands.
 
 ???
 
-The command pattern lets us take a block of code and its parameters, an use it as a data.
+The command pattern lets us take a block of code and its parameters, and use it as data.
 
 What are the benefits of this?
 
-We can reuse actions from different controllers.
+- We can reuse actions from different controllers.
 
-We can queue commands.
+- We can queue commands.
 
-We can create command macros, which are a sequence commands. These are commands calling other commands.
+- We can create command macros, which are a sequence of commands. These are commands calling other commands.
 
-We can log commands.
+- We can log commands.
 
-It would be easy to start supporting undo operations.
+- It would be easy to start supporting undo operations.
 
 And there's another thing we can also do with commands...
 
@@ -648,7 +668,7 @@ We can ignore them.
 
 Why would we like to ignore commands?
 
-What if the user who issues a command doesn't have permission to execute it? Sure, you can hide a button but maybe they'll figure out the API call.
+Well, what if the user who issues a command doesn't have permission to execute it? Sure, you can hide a button but maybe they'll figure out the API call.
 
 What if the command doesn't make any sense? What if the user is trying to publish something that's already been published?
 
@@ -659,16 +679,16 @@ For Dataverse 4.0, a Java EE 7 app which needs to support sensitive data and a f
 * Maximal code re-use between the API and the UI
 * By-design, permission-based security.
 
-.center[ <img src="images/dvn4.png" alt="">]
+.center[ <img src="images/dvprojlogo.jpg" alt="">]
 
 
 With some extensions and infrastructure (shown later) - we got just that.
 
 ???
 
-Why did we choose the command pattern for Dataverse? There are a few reasons.
+Why did we choose the command pattern for Dataverse? Let's see how it addresses those two challenges we mentioned.
 
-We're developing a full API so that practically any action you can take in the GUI you can also excute with an API call. With the command infrastructure, the same command is passed to the front end or the API back end. It's a way of ensuring that functionality is not tied to one interface or the other.
+Again, we're developing a full API so that practically any action you can take in the GUI you can also excute with an API call. With the command infrastructure, the same command is passed to the front end or the API back end. It's a way of ensuring that functionality is not tied to one interface or the other.
 
 The other main reason has to do with permissions. We are working toward supporting sensitive datasets so our implementation of the command pattern pays attention to permissions.
 
@@ -684,7 +704,7 @@ The other main reason has to do with permissions. We are working toward supporti
 
 ???
 
-Of course, Darth Vader doesn't care about all this. He just wants you to build the Death Star! On schedule!
+Of course, Darth Vader doesn't care about any of this. He just wants you to build the Death Star! On schedule!
 
 ---
 
@@ -700,7 +720,7 @@ Did you know Death Star runs on Java EE? It's true!
 
 Ok, they slipped some Python in there too...
 
-But you know, Darth Vader doesn't know (or care) but since we're talking about Java EE, let see how we can start to apply the command pattern to it.
+Let's talk about MVC and the command pattern in Java EE.
 
 ---
 
@@ -717,7 +737,7 @@ Balancing clean design and practicality.
 
 ???
 
-Let's move on to MVC in Java EE. Not as clean, but handles persistence and handles the complexities of a GUI over stateless protocol such as HTTP.
+Let's say this one interpretation of MVC in Java EE. It's not as clean as classic MVC, but handles persistence and handles the complexities of a GUI over stateless protocol such as HTTP.
 
 We've drawn the lines between the boxes, other people would probably place them differently.
 
@@ -751,7 +771,7 @@ class: middle center
 
 ???
 
-You might feel a great disturbance in the source.
+You *might* feel a great disturbance in the source.
 
 ---
 
@@ -940,13 +960,13 @@ Michael edited up to here
 
 ???
 
-Let's look at a command in Dataverse.
+Let's look at a command in Dataverse. This is the DeleteDataFileCommand.
 
-This is adjusted and simplified from actual code but you can find the real code on GitHub.
+This diagram is adjusted and simplified from actual code but you can find the real code on GitHub.
 
-EjbDataverseEngine is the invoker
+EjbDataverseEngine is the invoker. Think back to the stormtrooper that executes various commands.
 
-Service beans are the receivers (nearly all available in CommandContext)
+Service beans are the receivers but we don't pass them in explictly. Rather, the service beans are all injected into what we call the "CommandContext", which is available to all commands.
 
 Commands are annotated with required permissions.
 
@@ -971,7 +991,7 @@ IllegalCommandException thrown if command doesn't make sense (publish something 
 
 ???
 
-Again, each command has a context which is how we access the service beans so there's no need for dependency injection in the command itself.
+Again, each command has a context which is how we access the service beans so there's no need for dependency injection within the command itself.
 
 For each command we're always passing in a user and the object on which the command will be executed. Permissions are checked at the very start, before the command can proceed. Again, each command is annotated with the required permissions.
 
@@ -1036,7 +1056,7 @@ The intelligence goes into the commands, which again, get reused across the GUI 
 
 Can we replace beans with commands?
 
-Not entirely, due to dependency injection.
+Not entirely, due to dependency injection. We like being able to inject the beans into the CommandContext.
 
 We still need the EntityManager, but again, we like the simplification of service beans to focus on CRUD operations rather than business logic.
 
