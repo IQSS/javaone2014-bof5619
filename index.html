@@ -37,36 +37,7 @@
         padding-top: 1em;
       }
       */
-      .bigfont {
-        font-size: 2em;
-      }
-      .medfont {
-        font-size: 1.5em;
-      }
-      .regularfont {
-        font-size: .7em;
-      }
-  
-      .deleted {
-        text-decoration: line-through;
-      }
-
-      .slide-badge {
-        position: absolute;
-        right: 20px;
-        top: 20px;
-        border: 1px black solid;
-        -ms-transform: rotate(-7deg); /* IE 9 */
-        -webkit-transform: rotate(-7deg); /* Chrome, Safari, Opera */
-        transform: rotate(-7deg);
-      }
-      .slide-emph-max {
-        color: white;
-        background-color: black;
-      }
-      .slide-emph-mid {
-        background-color: #00d56b;
-      }
+      
       
       /* from http://nicolasgallagher.com/pure-css-speech-bubbles/demo/ */
       .example-obtuse {
@@ -798,6 +769,7 @@ public interface Command<R> {
   * `execute` is an expression (not a statement)
   * Command objects can be (and mostly are) immutable
 * The `CommandContext` parameter is used to allow the command access to server resources
+  * No dependency injection needed &rarr; Test using standard JUnit!
 .bottom-remark[
 Real code, comments removed.
 ]
@@ -853,7 +825,7 @@ public interface Command<R> {
 }
 
 ```
-`CommandException` has 2 sub-classes:
+`CommandException` has 3 sub-classes:
 * `IllegalCommandException` - Command makes no sense
   * e.g. move a parent to its descendant
 * `PermissionException` - Issuing user doesn't get to perform this operation over the affected receivers
@@ -881,7 +853,7 @@ public interface DataverseEngine {
 }
 ```
 
-* Modernized invoker - replaced the `setCommand`,`execute`,`getResult` sequence with a single method call.
+* Modernized invoker - replaced the `set`&rarr;`execute`&rarr;`get` sequence with a single method call.
 * Type parameter capture allows for type-safe execution of any command.
 
 .bottom-remark[
@@ -980,6 +952,10 @@ Code adapted for slide. Actual code has some extra neat stuff outside the scope 
 See https://github.com/IQSS/dataverse/blob/master/src/main/java/edu/harvard/iq/dataverse/api/AbstractApiBean.java#L123
 ]
 
+???
+
+Since expressions can go almost anywhere (as opposed to statements), we can do this nice enhanced for-loop, where we create, submit and execute the command in the loop's head.
+
 ---
 # Command Sequence Diagram
 
@@ -1015,43 +991,164 @@ See https://github.com/IQSS/dataverse/blob/master/src/main/java/edu/harvard/iq/d
 <div style="position: absolute; top:350px; right: 160px" class="speech speech-right">They'll be back.</div>
 
 ---
-# Dataverse Commands
+# Sample Command: Rename a Dataverse
 
-<img src="images/dataverse-classes.png" width="500" align="right"/>
+.smaller[```java
+@RequiredPermissions( Permission.UndoableEdit )
+public class RenameDataverseCommand 
+          extends AbstractCommand<Dataverse>{
+  private final String newName;
+  private final Dataverse renamed;
+  public RenameDataverseCommand( User aUser, 
+                    Dataverse aDataverse, String aNewName ) {
+    super( aUser, aDataverse );
+    newName = aNewName;
+    renamed = aDataverse;
+  }
+  
+  @Override
+  public Dataverse execute(CommandContext ctxt) throws CommandException {
+    if ( newName.trim().isEmpty() ) {
+      throw new 
+          IllegalCommandException("Dataverse name cannot be empty", this);
+    }
+    renamed.setName(newName);
+    return ctxt.dataverses().save(renamed);
+  }
+}
+```]
 
-- EjbDataverseEngine as "invoker" or "Command Server"
-- Service beans part of command context
-- Commands annotated with required permissions
-
+.bottom-remark[ Actual code]
 ???
 
-Let's look at a command in Dataverse.
-
-This is adjusted and simplified from actual code but you can find the real code on GitHub.
-
-EjbDataverseEngine is the invoker
-
-Service beans are the receivers (nearly all available in CommandContext)
-
+Here's a real command. 
 Commands are annotated with required permissions.
 
 PermissionException thrown if user lacks sufficient permission
 
-IllegalCommandException thrown if command doesn't make sense (publish something that's already published)
+Note the context usage and validations.
+
+---
+# Permissions and Commands
+
+* In code, permissions live in an enum. Each permission:
+  * States which objects is applies to.
+  * Holds a basic descriptive text.
+* In the database, permission live in a bit field
+  * Very fast, but must be kept under 64.
+  * No DB joins needed
+* Testing if a permission exists in a permission set is a bitwise operation.
+
+.smaller[```java
+public enum Permission {
+  Discover("See and search content", DvObject.class),
+  Download("Download the file", DataFile.class),
+  AccessUnpublishedContent("Access unpublished content", 
+                           DvObject.class),
+  AccessRestrictedMetadata("Access metadata marked as\"restricted\"",
+                           DvObject.class),
+  UndoableEdit("Edits that do not cause data loss", DvObject.class),
+  DestructiveEdit("Edits that cannot be reversed, such as deleting data", 
+                  DvObject.class),
+// ...
+```]
+
+---
+# Supporting Multiple Receivers
+When commands involve more than a single receiver, the `RequiredPermissionMap` annotation can be used.
+
+```java
+@RequiredPermissionsMap({
+  @RequiredPermissions( dataverseName = "moved",       
+                        value = {Permission.UndoableEdit, Permission.GrantPermissions} ),
+  @RequiredPermissions( dataverseName = "source",      
+                        value = Permission.UndoableEdit ),
+  @RequiredPermissions( dataverseName = "destination", 
+                        value = Permission.DestructiveEdit )
+})
+public class MoveDataverseCommand extends AbstractVoidCommand {
+  // ...
+  public MoveDataverseCommand( User aUser, 
+                               Dataverse moved, Dataverse destination ) {
+    super(aUser, dv("moved", moved),
+           dv("source",moved.getOwner()),
+           dv("destination",destination) );
+    this.moved = moved;
+    this.destination = destination;
+  }
+```
 
 ---
 
-# Merging Java EE and Commands
+# Command Composition
 
-* TODO present the mvcc-ee
-  * our command
-    - modern touches (not stateless, but with less state, generics )
-    - Context, so no dependency injection needed (pojo)
-      - Testability using JUnit!
-    - Metadata
-      - Permission Annotations
-      - user
-      - Receiver of a given type (DvObject)
+A dataset has a published version, accessible by everyone, and a draft version, accessible by the team only. We composed existing commands to get the latest version accessible for a given user:
+
+.smaller[```java
+@RequiredPermissions( Permission.Discover )
+public class GetLatestAccessibleDatasetVersionCommand
+       extends AbstractCommand<DatasetVersion>
+// ...
+@Override
+public DatasetVersion execute(CommandContext ctxt) throws CommandException {
+    DatasetVersion d = null;
+    
+    try {
+        d = ctxt.engine()
+*              .submit(new GetDraftDatasetVersionCommand(u, ds));
+    } catch(PermissionException ex) {}
+    
+    if ( d == null ) {
+        d = ctxt.engine()
+*              .submit(new GetLatestPublishedDatasetVersionCommand(u,ds));
+    }
+    
+    return d;
+}
+```]
+
+---
+# Easy Testing
+Since the command and the context are POJOs, we can mock them easily.
+.smaller[```java
+//...
+@Before
+public void setUp() {
+  testEngine = new TestDataverseEngine( new TestCommandContext(){...});
+//...
+@Test
+public void testValidMove() throws Exception {
+  testEngine.submit(
+      new MoveDataverseCommand(null, childB, childA));
+  
+  assertEquals( childA, childB.getOwner() );
+  assertEquals( Arrays.asList(root, childA), childB.getOwners() );
+}
+
+@Test( expected=IllegalCommandException.class )
+public void testInvalidMove() throws Exception {
+  testEngine.submit(
+      new MoveDataverseCommand(null, childA, grandchildAA));
+  fail();
+}
+```]
+
+???
+Here I'd like to mention the testability of the code. We can mock the command context and check to make sure IllegalCommand exceptions are thrown. For example, if you issue a command trying to move a folder to its child... that's simply not allowed. 
+
+You can't have /usr/local/bin and move "usr" under "local".
+
+The TestCommandContext class returns `null` for all the beans except for those relevant to the test. For these beans, it returns a minimal implementation where only relevant methods work.
+
+---
+class: slide-emph-mid middle
+
+Given that:
+  * Service beans act on model objects,
+  * Commands act on model objects, and
+  * Commands work well for us,
+
+# Can we remove all service beans?
 
 
 ???
@@ -1061,25 +1158,40 @@ Again, each command has a context which is how we access the service beans so th
 For each command we're always passing in a user and the object on which the command will be executed. Permissions are checked at the very start, before the command can proceed. Again, each command is annotated with the required permissions.
 
 ---
-
-# More on Dataverse Commands
-
-- Permission annotations
-    - Dealing with inheritance
-- Permission sets as bit fields.
-- Testability (demo junit code)
-- Resuability (demo backing bean/api code)
-- Decorators
-- Decorator collides with annotations, so we use static/dynamic combo
+## Can we remove all service beans?
+# Yes
+* Command context can give direct access to the entity manager, JMS resources and the like, so commands can use them directly.
+* There's just one problem...
 
 ???
 
-Here I'd like to mention the testability of the code. We can mock the command context and check to make sure IllegalCommand exceptions are thrown. For example, if you issue a command trying to move a folder to its child... that's simply not allowed. You can't have /usr/local/bin and move "usr" under "local".
+Unless you consider the EjbEngine to be a service bean. We take it as a part of the command pattern adaptation. At any event, we need it to allow the container to inject dependencies somewhere.
+
+---
+## Can we remove all service beans?
+# Yes
+* Command context can give direct access to the entity manager, JMS resources and the like, so commands can use them directly.
+* There's just one problem...
+
+.center[
+#It's the Wrong Question
+]
+
+---
+class: slide-emph-mid middle
+
+Given that:
+  * Service beans act on model objects,
+  * Commands act on model objects, and
+  * Commands work well for us,
+
+# .deleted[Can] Should we remove all service beans?
 
 ---
 
 # Implementation Points
 
+- Decorator collides with annotations, so we use static/dynamic combo
 - Permission are an enum, stored as bit field in the DB (long)
   - no joins, bitwise tests.
 - Static vs Dynamic permission lists. Can't support e.g. Decorator. Considering a static/dynamic approach to support this

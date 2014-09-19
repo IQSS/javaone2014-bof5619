@@ -1,3 +1,40 @@
+.bigfont {
+  font-size: 2em;
+}
+.medfont {
+  font-size: 1.5em;
+}
+.regularfont {
+  font-size: .7em;
+}
+.smaller .remark-code .remark-code-line {
+  font-size: 0.9em;
+}
+.smaller {
+  font-size: 0.9em;
+}
+
+.deleted {
+  text-decoration: line-through;
+}
+
+.slide-badge {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  border: 1px black solid;
+  -ms-transform: rotate(-7deg); /* IE 9 */
+  -webkit-transform: rotate(-7deg); /* Chrome, Safari, Opera */
+  transform: rotate(-7deg);
+}
+.slide-emph-max {
+  color: white;
+  background-color: black;
+}
+.slide-emph-mid {
+  background-color: #00d56b;
+}
+
 .dimmed {
   color: #AAA;
 }
