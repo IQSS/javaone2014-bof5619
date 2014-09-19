@@ -1,20 +1,31 @@
 @startuml
 
 actor      user
-participant view
-participant controller
-participant engine
+box "view" #EEEEEE
+  participant jsf as "JSF"
+  participant backing as "Backing Bean"
+end box
+box "command" #FFFFEE
+  participant ngn as "Engine (invoker)"
+  participant cmd as "Command"
+end box
+box "model" #EEEEEE
+  participant ent as "@Entity"
+  database em as "EntityManager (?)"
+end box
 
-user -> view : click button
-view -> controller : button_clicked()
-create command
-controller -> command : new( user, data )
-controller -> engine: submit(command)
-engine -> command : execute( context )
-command -> model: change
-command --> engine: OK
-engine --> controller : OK
-controller --> view : OK
-view --> user : "OK"
+user -> jsf : click button
+jsf -> backing : button_clicked()
+backing -> backing : validate
+backing -> cmd : new (+params)
+backing -> ngn : submit(command)
+ngn -> cmd : execute(ctxt)
+cmd -> ent : change
+cmd <-- ent : ok
+cmd -> em : persist
+cmd <-- em : ok
+backing <-- cmd : ok
+jsf <-- backing : ok
+user <-- jsf : "OK"
 
 @enduml

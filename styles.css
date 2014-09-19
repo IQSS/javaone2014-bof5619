@@ -16,6 +16,24 @@
   padding: 1em;
 }
 
+.speech {
+  background-color: white;
+  border-radius: 1em;
+  padding: 0.5em;
+  border: 1px black solid;
+  box-shadow: 0 2px 4px rgba(0,0,0,.5);
+  font-family: 'Architects Daughter';
+}
+
+.speech-left {
+  border-bottom-left-radius: 0.2em;
+}
+
+.speech-right {
+  border-bottom-right-radius: 0.2em;
+}
+
+/* Remark Overrides */
 .hljs-keyword {
   color: blue;
 }
