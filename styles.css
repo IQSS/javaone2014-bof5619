@@ -15,9 +15,17 @@
 }
 
 .deleted {
-  text-decoration: line-through;
+  /*text-decoration: line-through;*/
+  position: relative;
 }
-
+.deleted::after {
+    border-bottom: 5px solid black;
+    content: "";
+    left: -4px;
+    position: absolute;
+    right: -4px;
+    top: 50%;
+}
 .slide-badge {
   position: absolute;
   right: 20px;
@@ -33,6 +41,18 @@
 }
 .slide-emph-mid {
   background-color: #00d56b;
+}
+.slide-emph-happy {
+  background-color: #66ccff;
+}
+.slide-emph-happy h1 {
+  color: #66ccff;
+  text-shadow: 0 0 10px white;
+  font-weight: bold;
+  font-size: 5em;
+}
+.slide-emph-happy h2 {
+  color: #FFF;
 }
 
 .dimmed {
@@ -70,6 +90,26 @@
   border-bottom-right-radius: 0.2em;
 }
 
+.problem {
+  font-size: 3em;
+  font-weight: bold;
+  color: red;
+  margin: 2em 0;
+ -webkit-animation: throbeText 0.5s linear infinite alternate; /* Chrome, Safari, Opera */
+  animation: throbeText 0.5s linear infinite alternate;
+
+}
+/* Chrome, Safari, Opera */
+@-webkit-keyframes throbeText {
+    from {text-shadow: 0 0 0px #FFF;}
+    to {text-shadow: 0 0 10px #FF0;}
+}
+
+/* Standard syntax */
+@keyframes throbeText {
+    from {text-shadow: 0 0 0px #FFF;}
+    to {text-shadow: 0 0 10px #FF0;}
+}
 /* Remark Overrides */
 .hljs-keyword {
   color: blue;
@@ -77,5 +117,7 @@
 
 .remark-code-line-highlighted {
   background-color: #FFF;
-
+}
+.remark-inline-code {
+  font-size: 0.8em;
 }

@@ -16,10 +16,6 @@
       }
       .remark-code, .remark-inline-code { font-family: Menlo, 'Ubuntu Mono', Courier, monospace; }
 
-      .remark-inline-code {
-        background-color: #EEE;
-        font-size: 0.8em;
-      }
       /* Two-column layout */
       /*
       .left-column {
@@ -138,9 +134,6 @@ class: bigfont
 3. Command Adaptation for modern Java EE
   * With real-world examples!
 4. The Lean Bean Design Pattern
-
-TODO
-* Should briefly summarize the benefit to Dataverse early in the talk (GUI and API use same commands, enforcing permissions with annotations on commands) before we define MVC, etc.
 
 .regularfont[
 Slides and code:
@@ -578,7 +571,7 @@ The command pattern allows us to treat code blocks as data. So we can:
 
 We can do all this (and more!) with commands.
 
-.right[But there's one very special thing we can also do...]
+.right[But there's one very special thing we can also do with commands...]
 
 ???
 
@@ -891,6 +884,10 @@ Code adapted for slide.
 Original file at: https://github.com/IQSS/dataverse/blob/master/src/main/java/edu/harvard/iq/dataverse/api/Dataverses.java#L123
 ]
 
+???
+
+The CreateDatasetCommand creates it in the system - assigns permissions, sets up notifications and triggers other business processes.
+
 ---
 
 # Command Engine in the Wild #2
@@ -1082,7 +1079,7 @@ public class MoveDataverseCommand extends AbstractVoidCommand {
 
 # Command Composition
 
-A dataset has a published version, accessible by everyone, and a draft version, accessible by the team only. We composed existing commands to get the latest version accessible for a given user:
+A dataset has a published version, accessible by everyone, and a draft version, accessible by the team only. We composed existing commands to get the latest version accessible to the `User` issuing the `Command`:
 
 .smaller[```java
 @RequiredPermissions( Permission.Discover )
@@ -1173,8 +1170,8 @@ Unless you consider the EjbEngine to be a service bean. We take it as a part of 
 * Command context can give direct access to the entity manager, JMS resources and the like, so commands can use them directly.
 * There's just one problem...
 
-.center[
-#It's the Wrong Question
+.center.problem[
+It's the Wrong Question
 ]
 
 ---
@@ -1188,54 +1185,84 @@ Given that:
 # .deleted[Can] Should we remove all service beans?
 
 ---
+# Should We Remove All Service Beans?
 
-# Implementation Points
+## Probably Not
+We tried that. Didn't work well, since the commands became too detailed.
 
-- Decorator collides with annotations, so we use static/dynamic combo
-- Permission are an enum, stored as bit field in the DB (long)
-  - no joins, bitwise tests.
-- Static vs Dynamic permission lists. Can't support e.g. Decorator. Considering a static/dynamic approach to support this
-  - maybe implemented by then??
+## Current Status - a more balanced approach
+**Commands** deal with: Operations on model objects.
 
-???
-
-Here are some implementation details.
-
-Permissions are an enum, stored as a bit field in the database as a `long`.
-
-We do this for performance. We don't need any joins to test permissions. It's a bitwise test.
+**Service Beans** deal with: save, update, delete and various finds of model objects.
 
 ---
+# Should We Remove All Service Beans?
 
+## Probably Not
+We tried that. Didn't work well, since the commands became too detailed.
+
+## Current Status - a more balanced approach
+**Commands** deal with: Operations on model objects.
+
+**Service Beans** deal with: save, update, delete and various finds of model objects.
+
+.right[Hence, we call this:]
+
+---
+class: slide-emph-happy center middle
+
+## _the_
 # Lean Bean Design Pattern
-- traditional JavaEE uses service beans to modify models
-- We use commands
-- &rarr; Can we get rid of service beans? would that be wise?
-- business logic goes in commands
-- service beans do basic CRUD
+
+---
+# Lean Beans (are made of this)
+
+* Actions on models done by Command objects 
+* CRUD done by lean beans
+
+## Benefits
+* Code as data
+* Reuse commands from various places
+* Permission validation baked into the system
+* Commands are POJOs:
+  * Reusable outside of Java EE
+  * Testable using JUnit
+* Easy to find functionality - look at the class' name
 
 ???
-
 Finally, we come to the "Lean Bean Design Pattern".
 
 It boils down to using the command pattern. We're putting business logic into commands. The more we go down this path we're finding the service beans are getting smaller and more focused on basic CRUD operations. Create, Read, Update, Delete.
 
 The intelligence goes into the commands, which again, get reused across the GUI and the API.
-
 ---
+# Lean Beans (are made of this)
 
-# Can we replace beans with commands?
+* Actions on models done by Command objects 
+* CRUD done by lean beans
 
-- Not entirely, due to dependency injections etc.
-- We can replace everything except `EntityManager`s, JMS queue pools etc.
+## Downside
+* Some infrastructure needed
+  * Engine
+  * Permission annotations
+* Requires some learning - not a mainstream solution
+
+.btw[Also, we're just starting this - so not a lot of experience yet.]
 
 ???
 
-Can we replace beans with commands?
+These are the downsides. Note that we're just starting this, so not a lot of industry experience.
 
-Not entirely, due to dependency injection.
 
-We still need the EntityManager, but again, we like the simplification of service beans to focus on CRUD operations rather than business logic.
+---
+# Future Work
+Some issues we already found out, and will deal with soon:
+
+### As Annotations are static, required permissions can't be dynamic
+This conflicts with, e.g. The Decorator pattern. We will use a static-dynamic combo, where the basic command implementation uses reflection to return the required permissions, but subclasses can override this behavior.
+
+### Permission pre-flight check
+Current implementation requires an actual object to work on, but the database layer allows for permission checks using the entity's id only - no real need to retrieve the object. We need to take advantage of this. Somehow.
 
 ---
 
@@ -1256,10 +1283,16 @@ We still need the EntityManager, but again, we like the simplification of servic
 - http://iqss.github.io/javaone2014-bof5619 (sample code from this talk)
 
 ---
-class: middle center
+class: slide-emph-happy middle center
 
 #Thanks
 
+
+Visit the IQSS data science team at http://datascience.iq.harvard.edu
+
+Dataverse project @ GitHub: https://github.com/IQSS/dataverse
+
+[![IQSS logo](images/iqss-logo.png)](http://www.iq.harvard.edu)
 .bottom-remark[
 Presentation created using remark.js. UML drawings done with PlantUML.
 ]
