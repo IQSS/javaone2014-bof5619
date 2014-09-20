@@ -175,7 +175,7 @@ Let's talk for a moment about two challenges we've tackled in Dataverse, our Jav
 
 First, we're trying to maximize the amount of code re-use between the web interface and the RESTful API. We want the same code path to be traveled no matter how you interact with the application. Ideally, everything you can do in the GUI is also possible via the API (and vice versa).
 
-Second, we have a focus on *security*. Our users are interested in hosting sensitive datasets in our application, so we need *tight* security and *granular permissions*.
+Second, we have a focus on *security*. Our users are interested in hosting *sensitive datasets* in our application, so we need *tight* security and *granular permissions*.
 
 In the end, we chose the command pattern (with some adjustments) to solve both of these problems (code re-use and security), but before we dive into the command pattern, let's first talk about MVC.
 
@@ -419,7 +419,7 @@ Before we instantiate our CheckIdCommand, we need to decide which Suspect we're 
 
 And who's going to execute the CheckIdCommand? The stormtrooper. The "invoker".
 
-Of course, when we call `execute` on the stormtrooper, that annoying JediMindTrick exception gets thrown so we see, "We don't need to see his identification... move along." 
+Of course, when we call `execute` on the stormtrooper, all we hear is "move along, move along."
 
 ---
 
@@ -478,9 +478,9 @@ public class StormTrooper {
 
 }
 
-- stateful: setCommand, another call to execute
-
 ```
+
+- stateful: setCommand, another call to execute
 
 ???
 
@@ -547,7 +547,9 @@ public class CheckShipCommand implements Command {
 
 ???
 
-For completeness, here's the CheckShipCommand I mentioned. It's very similar to the other command in that it implements the execute method. In this case the reciever of the command is a ship.
+For completeness, here's the CheckShipCommand I mentioned. It's very similar to the other command in that it implements the execute method.
+
+In this case the reciever of the command is a ship. It might be a piece of junk. We don't know.
 
 ---
 
@@ -635,9 +637,9 @@ class: middle center slide-emph-max
 
 We can ignore them.
 
-Why would we like to ignore commands?
+Why would we want to ignore commands?
 
-What if the user who issues a command doesn't have permission to execute it? Sure, you can hide a button but maybe they'll figure out the API call.
+What if the user who issues a command doesn't have permission to execute it? Sure, you can hide a button, but maybe they'll figure out the API call.
 
 What if the command doesn't make any sense? What if the user is trying to publish something that's already been published?
 
@@ -658,7 +660,7 @@ With some extensions and infrastructure (shown later) - we got just that.
 
 Why did we choose the command pattern for Dataverse? Let's see how it addresses those two challenges we mentioned.
 
-Again, we're developing a full API so that practically any action you can take in the GUI you can also excute with an API call. With the command infrastructure, the same command is passed to the front end or the API back end. It's a way of ensuring that functionality is not tied to one interface or the other.
+Again, we're developing a full API so that practically any action you can take in the GUI you can also execute with an API call. With the command infrastructure, the *same* command is passed to the front end or the API back end. It's a way of ensuring that functionality is not tied to one interface or the other.
 
 The other main reason has to do with permissions. Again, we are working toward supporting sensitive datasets so our implementation of the command pattern pays attention to permissions.
 
@@ -793,18 +795,30 @@ public interface Command<R> {
 }
 
 ```
+
 * Modern touches
-  * Generics
   * `execute` is an expression (not a statement)
+  * Generics
   * Command objects can be (and mostly are) immutable
 * The `CommandContext` parameter is used to allow the command access to server resources
   * No dependency injection needed &rarr; Test using standard JUnit!
 .bottom-remark[
 Real code, comments removed.
 ]
+
 ???
 
-Contrast CommandContext and dependency injections.
+In our application, we have adapted the command pattern to support permissions and execute in a Java EE environment.
+
+We like to think we've added some modern touches.
+
+Our version of "execute" is an expression, not a statement, and it makes use of generics.
+
+Command objects can be (and mostly are) immutable.
+
+The `CommandContext` parameter is used to give the command access to server resources, such as service beans.
+
+This means that no dependency injection is necessary within the commands themselves. You can write tests using standard JUnit.
 
 ---
 
@@ -832,9 +846,10 @@ Real code, comments removed.
 ]
 
 ???
-User - represents the user issuing the command
-DvObject - For this discussion, safe to assume it's either a "file" or a "folder"
-Contrast the CommandContext with dependency injection (no flame wars!)
+
+The next thing to notice about how we've implemented commands is that they operate on Dataverse object. For now, you can think of Dataverse objects as files and folders. These are the "receivers" of commands, the equivalent of passing in Obiwan Kenobe or the Millennium Falcon from before.
+
+Also, in our system, when you instantiate a command, you always specify a "User" object. This is the person attempting to executing the command, which may or may not succeed based on permissions.
 
 ---
 
@@ -865,10 +880,16 @@ Real code, comments removed.
 ]
 
 ???
-CommandExecutionException - So we just with this to System.out... some sysadmin will pick it up later. For sure.
+
+Notice that the "execute" method can throw a CommandException. We've defined three subtypes for command exceptions:
+
+First, an `IllegalCommandException` is thrown when the command makes no sense. Let's say you're trying to publish something that's already published. Let's say you're trying to move a folder to one of its own subfolders. The system won't let you do stuff like this. These are the kind of operations that are easy to write unit tests for.
+
+Second, a `PermissionException` is thrown when a user isn't allowed to perform the operation on the affected receivers, the dataverse objects in question. We'll explain the permission system further in a bit.
+
+Finally, a `CommandExecutionException` is a system error, an internal error within our application. The idea is to log these and notify a sysadmin that there's something to fix. 
 
 ---
-
 
 # Command Invoker, Adapted
 
@@ -890,6 +911,18 @@ Real code, comments removed.
 ]
 
 ???
+
+We decided to call the invoker an "engine" since there's a lot going on under the hood.
+
+We hide the complexity of the engine from developers who are asked to write commands.
+
+In the classic command pattern, we saw how the client runs "execute" on the invoker after loading up a command.
+
+We say that you "submit" a command to our engine. The command may or may not succeed, based on the user you passed in and the objects you're trying to manipulate. 
+
+You let the engine to a lot of error checking. You catch CommandExceptions and report back to the user what the result was.
+
+The Type parameter capture allows for type-safe execution of any command.
 
 ---
 
