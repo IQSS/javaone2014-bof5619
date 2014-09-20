@@ -351,10 +351,12 @@ That's some of the power of the dark s... er, power of the command pattern... th
 (Technically, you don't have to use the `interface` keyword; It can be any class. You could call it the command supertype.)
 
 ---
+
 layout: true
 .slide-badge[
   <img src="images/not-the-droids.png" width="200"/>
 ]
+
 ---
 
 # Complete CheckIdCommand
@@ -988,6 +990,7 @@ Code adapted for slide.
 ???
 
 Note how the code here has two parts - decide on the command and execute it. This is the "code as data" aspect of the command pattern at work. Here we just store it in a variable, but it could be put on a queue or such other thing.
+
 ---
 
 # Command Engine in a Wild Loop
@@ -1023,6 +1026,7 @@ See https://github.com/IQSS/dataverse/blob/master/src/main/java/edu/harvard/iq/d
 Since expressions can go almost anywhere (as opposed to statements), we can do this nice enhanced for-loop, where we create, submit and execute the command in the loop's head.
 
 ---
+
 # Command Sequence Diagram
 
 .center[
@@ -1057,6 +1061,7 @@ Since expressions can go almost anywhere (as opposed to statements), we can do t
 <div style="position: absolute; top:350px; right: 160px" class="speech speech-right">They'll be back.</div>
 
 ---
+
 # Sample Command: Rename a Dataverse
 
 .smaller[```java
@@ -1095,6 +1100,7 @@ PermissionException thrown if user lacks sufficient permission
 Note the context usage and validations.
 
 ---
+
 # Permissions and Commands
 
 * In code, permissions live in an enum. Each permission:
@@ -1120,6 +1126,7 @@ public enum Permission {
 ```]
 
 ---
+
 # Supporting Multiple Receivers
 When commands involve more than a single receiver, the `RequiredPermissionMap` annotation can be used.
 
@@ -1174,6 +1181,7 @@ public DatasetVersion execute(CommandContext ctxt) throws CommandException {
 ```]
 
 ---
+
 # Easy Testing
 Since the command and the context are POJOs, we can mock them easily.
 .smaller[```java
@@ -1200,6 +1208,7 @@ public void testInvalidMove() throws Exception {
 ```]
 
 ???
+
 Here I'd like to mention the testability of the code. We can mock the command context and check to make sure IllegalCommand exceptions are thrown. For example, if you issue a command trying to move a folder to its child... that's simply not allowed. 
 
 You can't have /usr/local/bin and move "usr" under "local".
@@ -1207,6 +1216,7 @@ You can't have /usr/local/bin and move "usr" under "local".
 The TestCommandContext class returns `null` for all the beans except for those relevant to the test. For these beans, it returns a minimal implementation where only relevant methods work.
 
 ---
+
 class: slide-emph-mid middle
 
 Given that:
@@ -1216,7 +1226,6 @@ Given that:
 
 # Can we remove all service beans?
 
-
 ???
 
 Again, each command has a context which is how we access the service beans so there's no need for dependency injection in the command itself.
@@ -1224,6 +1233,7 @@ Again, each command has a context which is how we access the service beans so th
 For each command we're always passing in a user and the object on which the command will be executed. Permissions are checked at the very start, before the command can proceed. Again, each command is annotated with the required permissions.
 
 ---
+
 ## Can we remove all service beans?
 # Yes
 * Command context can give direct access to the entity manager, JMS resources and the like, so commands can use them directly.
@@ -1234,6 +1244,7 @@ For each command we're always passing in a user and the object on which the comm
 Unless you consider the EjbEngine to be a service bean. We take it as a part of the command pattern adaptation. At any event, we need it to allow the container to inject dependencies somewhere.
 
 ---
+
 ## Can we remove all service beans?
 # Yes
 * Command context can give direct access to the entity manager, JMS resources and the like, so commands can use them directly.
@@ -1244,6 +1255,7 @@ It's the Wrong Question
 ]
 
 ---
+
 class: slide-emph-mid middle
 
 Given that:
@@ -1254,6 +1266,7 @@ Given that:
 # .deleted[Can] Should we remove all service beans?
 
 ---
+
 # Should We Remove All Service Beans?
 
 ## Probably Not
@@ -1265,6 +1278,7 @@ We tried that. Didn't work well, since the commands became too detailed.
 **Service Beans** deal with: save, update, delete and various finds of model objects.
 
 ---
+
 # Should We Remove All Service Beans?
 
 ## Probably Not
@@ -1278,12 +1292,14 @@ We tried that. Didn't work well, since the commands became too detailed.
 .right[Hence, we call this:]
 
 ---
+
 class: slide-emph-happy center middle
 
 ## _the_
 # Lean Bean Design Pattern
 
 ---
+
 # Lean Beans (are made of this)
 
 * Actions on models done by Command objects 
@@ -1304,7 +1320,9 @@ Finally, we come to the "Lean Bean Design Pattern".
 It boils down to using the command pattern. We're putting business logic into commands. The more we go down this path we're finding the service beans are getting smaller and more focused on basic CRUD operations. Create, Read, Update, Delete.
 
 The intelligence goes into the commands, which again, get reused across the GUI and the API.
+
 ---
+
 # Lean Beans (are made of this)
 
 * Actions on models done by Command objects 
