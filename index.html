@@ -926,7 +926,7 @@ We say that you "submit" a command to our engine. The command may or may not suc
 
 You let the engine to a lot of error checking. You catch CommandExceptions and report back to the user what the result was.
 
-The Type parameter capture allows for type-safe execution of any command.
+`submit` is a generic method, allowing type-safe execution of any command. If you try to assign the return value of a command to the wrong type you'll get an "incompatible types" error at compile time. The CreateDatasetCommand returns a dataset. The engine prevents you from assigning the result to a DataFile, for example.
 
 ---
 
@@ -959,7 +959,17 @@ Original file at: https://github.com/IQSS/dataverse/blob/master/src/main/java/ed
 
 ???
 
-The CreateDatasetCommand creates it in the system - assigns permissions, sets up notifications and triggers other business processes.
+Here we see the command engine in the wild. We're going to see how we submit the same CreateDatasetCommand to it from the JSF web interface and from the RESTful API based on JAX-RS.
+
+We'll look at the API call first.
+
+We're getting back a persisted dataset from the engine when we submit the CreateDatasetCommand to it.
+
+We send back a JAX-RS response if the dataset was created or not.
+
+You can look into the CreateDatasetCommand to see all the stuff it's doing... assigning permissions, sending notifications, triggering other business logic.
+
+But if you're working on the API endpoint, all you care about is sending the right command to the engine.
 
 ---
 
@@ -989,9 +999,14 @@ return "/dataset.xhtml?id=" + dataset.getId() + ...
 .bottom-remark[
 Code adapted for slide.
 ]
+
 ???
 
-Note how the code here has two parts - decide on the command and execute it. This is the "code as data" aspect of the command pattern at work. Here we just store it in a variable, but it could be put on a queue or such other thing.
+Here's the front end, JSF. We're still submitting the same CreateDatasetCommand to the engine if we're in "create" mode.
+
+If we're in "edit" mode we send the UpdateDatasetCommand. In both cases we get back a dataset but we're first deciding which command to send.
+
+This is the "code as data" aspect of the command pattern at work. The command is simply stored as a variable, but you can imagine the command being put in a queue. Again, a command is a first class object you can pass around.
 
 ---
 
@@ -1025,7 +1040,11 @@ See https://github.com/IQSS/dataverse/blob/master/src/main/java/edu/harvard/iq/d
 
 ???
 
+We mentioned that our version of "execute" is an expression rather than a statement. What does this mean in practice?
+
 Since expressions can go almost anywhere (as opposed to statements), we can do this nice enhanced for-loop, where we create, submit and execute the command in the loop's head.
+
+There's a lot of flexibility in how we make use of the engine.
 
 ---
 
@@ -1034,6 +1053,12 @@ Since expressions can go almost anywhere (as opposed to statements), we can do t
 .center[
   <img src="uml/mvcc-ee.svg" width="600">
 ]
+
+???
+
+We were wondering how to cram commands into our sequence diagram. Here's how.
+
+We've still got JSF talking to a backing bean. But now the backing bean submits commands to the engine and the commands manipulate the model.
 
 ---
 
@@ -1045,6 +1070,10 @@ Since expressions can go almost anywhere (as opposed to statements), we can do t
 
 <div style="position: absolute; top:100px; left: 180px" class="speech speech-left">Hey, where did the service beans go?</div>
 <div style="position: absolute; top:140px; left: 180px">/</div>
+
+???
+
+Now, you might be asking yourself, "Where did the service beans go?"
 
 ---
 
@@ -1061,6 +1090,14 @@ Since expressions can go almost anywhere (as opposed to statements), we can do t
   <img src="images/obiwan.jpg" width="100" style="box-shadow: 0 2px 4px rgba(0,0,0,.5);">
 </div>
 <div style="position: absolute; top:350px; right: 160px" class="speech speech-right">Service beans will be with you, always.</div>
+
+???
+
+Obiwan says, "Service beans will be with you... always."
+
+Will they? What does *that* mean?
+
+Was Uncle Owen right? Is that wizard just a crazy old man?
 
 ---
 
@@ -1092,22 +1129,32 @@ public class RenameDataverseCommand
 ```]
 
 .bottom-remark[ Actual code]
+
 ???
 
-Here's a real command. 
-Commands are annotated with required permissions.
+So where are the service beans?
 
-PermissionException thrown if user lacks sufficient permission
+Let's look at the RenameDataverseCommand.
 
-Note the context usage and validations.
+Once we get past a validation check, we see "context dot dataverses dot save".
+
+That "save" is a method on the DataverseServiceBean and we get to it through what we're calling the CommandContext.
+
+So the service beans are still with us. But they're in charge of relatively simple operations like "save".
+
+The next thing to notice about the way we've implemented commands is that we annotate them with required permissions.
+
+This command requires the "undoable" edit permission.
+
+A PermissionException is thrown if user lacks sufficient permission
 
 ---
 
 # Permissions and Commands
 
 * In code, permissions live in an enum. Each permission:
-  * States which objects is applies to.
   * Holds a basic descriptive text.
+  * States which objects is applies to.
 * In the database, permission live in a bit field
   * Very fast, but must be kept under 64.
   * No DB joins needed
@@ -1126,6 +1173,18 @@ public enum Permission {
                   DvObject.class),
 // ...
 ```]
+
+???
+
+Let's look a little deeper at permissions.
+
+We put all of our permissions in an enum. That enum contains a description of what the permission means and it specifies which object the permission can be applied to.
+
+How do we store permissions in the database?
+
+For performance, we store permissions in a bit field backed by a long. This kind of like Unix permissions work, how you chmod 755 or chmod 644 a file.
+
+It means we don't need expensive database joins when we're checking permissions.  Testing if a permission exists is a bitwise operation.
 
 ---
 
@@ -1152,6 +1211,11 @@ public class MoveDataverseCommand extends AbstractVoidCommand {
     this.destination = destination;
   }
 ```
+???
+
+We mentioned that we annotate our commands with the required permission but what if the command operates on more than one object at a time? What if we want to specify that different permissions are required on different objects that are being manipulated by the command?
+
+No problem. We use a RequiredPermissionMap to specify that you need the "DestructiveEdit" permission on this object and different permission on a different object.
 
 ---
 
@@ -1182,9 +1246,20 @@ public DatasetVersion execute(CommandContext ctxt) throws CommandException {
 }
 ```]
 
+???
+
+What about composing commands? Calling commands from other commands. This is supported too, and here's an example.
+
+The parent command first submits the GetDraftDatasetCommand to the engine.
+
+If we get null back, the GetPublishedDatasetCommand is submitted. 
+
+We get some nice code re-use here, calling commands from commands.
+
 ---
 
 # Easy Testing
+
 Since the command and the context are POJOs, we can mock them easily.
 .smaller[```java
 //...
@@ -1230,20 +1305,33 @@ Given that:
 
 ???
 
-Again, each command has a context which is how we access the service beans so there's no need for dependency injection in the command itself.
+So, service beans act on model objects.
 
-For each command we're always passing in a user and the object on which the command will be executed. Permissions are checked at the very start, before the command can proceed. Again, each command is annotated with the required permissions.
+Commands act on model objects.
+
+Was Obiwan right? Will service beans be with us, always?
+
+Can we remove the service beans?
 
 ---
 
 ## Can we remove all service beans?
+
 # Yes
-* Command context can give direct access to the entity manager, JMS resources and the like, so commands can use them directly.
+* Command context could give direct access to the entity manager, JMS resources and the like, so commands could use them directly.
 * There's just one problem...
 
 ???
 
-Unless you consider the EjbEngine to be a service bean. We take it as a part of the command pattern adaptation. At any event, we need it to allow the container to inject dependencies somewhere.
+The answer is yes, unless you consider the engine to be a service bean.
+
+We consider the engine part of our command pattern adaptation.
+
+At any event, we need to allow the container to inject dependencies somewhere and we call that the CommandContext.
+
+From the CommandContext we can directly access the EntityManager and JMS resources... 
+
+But there's one problem...
 
 ---
 
@@ -1256,6 +1344,10 @@ Unless you consider the EjbEngine to be a service bean. We take it as a part of 
 It's the Wrong Question
 ]
 
+???
+
+It's the wrong question.
+
 ---
 
 class: slide-emph-mid middle
@@ -1266,6 +1358,10 @@ Given that:
   * Commands work well for us,
 
 # .deleted[Can] Should we remove all service beans?
+
+???
+
+*Should* we remove all the service beans? That's really the question.
 
 ---
 
@@ -1278,6 +1374,17 @@ We tried that. Didn't work well, since the commands became too detailed.
 **Commands** deal with: Operations on model objects.
 
 **Service Beans** deal with: save, update, delete and various finds of model objects.
+
+???
+
+Probably not. We tried it and commands became too detailed.
+
+We're still iterating on this.
+
+Right now we're thinking...
+
+- Commands should deal with operations on model objects
+- Service beans should deal with basic CRUD operations: create, read, update, delete.
 
 ---
 
@@ -1293,12 +1400,20 @@ We tried that. Didn't work well, since the commands became too detailed.
 
 .right[Hence, we call this:]
 
+???
+
+We're still trying to discover the pattern. For now we're calling it...
+
 ---
 
 class: slide-emph-happy center middle
 
 ## _the_
 # Lean Bean Design Pattern
+
+???
+
+... the Lean Bean Design Pattern!
 
 ---
 
@@ -1317,11 +1432,24 @@ class: slide-emph-happy center middle
 * Easy to find functionality - look at the class' name
 
 ???
-Finally, we come to the "Lean Bean Design Pattern".
 
-It boils down to using the command pattern. We're putting business logic into commands. The more we go down this path we're finding the service beans are getting smaller and more focused on basic CRUD operations. Create, Read, Update, Delete.
+Again,
 
-The intelligence goes into the commands, which again, get reused across the GUI and the API.
+* Actions on models are done by Command objects 
+* CRUD is done by lean beans
+
+The benefits include:
+
+* Treating code as data
+* Reusing commands from various places
+* Having permission validation is baked into the system
+
+Commands are POJOs (Plain Old Java Objects) which means they are:
+
+* Reusable outside of Java EE
+* Testable using JUnit
+
+Finally, it's easy to find functionality. Just look at the class names of commands.
 
 ---
 
@@ -1340,24 +1468,38 @@ The intelligence goes into the commands, which again, get reused across the GUI 
 
 ???
 
-These are the downsides. Note that we're just starting this, so not a lot of industry experience.
+These are the downsides we've notice so far.
 
+First, you need to write some infrastructure code. We wrote the command engine. We put in the checks for annotations on permissions.
+
+In addition, from what we can tell, using the command pattern in Java EE is not an especially mainstream solution. You may need to explain it to your developers.
 
 ---
+
 # Future Work
+
 Some issues we already found out, and will deal with soon:
 
 ### As Annotations are static, required permissions can't be dynamic
+
 This conflicts with, e.g. The Decorator pattern. We will use a static-dynamic combo, where the basic command implementation uses reflection to return the required permissions, but subclasses can override this behavior.
 
 ### Permission pre-flight check
+
 Current implementation requires an actual object to work on, but the database layer allows for permission checks using the entity's id only - no real need to retrieve the object. We need to take advantage of this. Somehow.
+
+???
+
+Let's talk about future work. Where are we going with the Lean Bean pattern?
+
+First, we're not sure we like using static annotations for required permissions. We're considering a static-dynamic combination where the basic command implementation uses reflection to return the required permission. But then we'd allow subclasses to override this behavior.
+
+Second, we'd like to get away from requiring an instantiated object to check permissions. This would help with unit testing.
 
 ---
 
 # More on the command pattern
 
-- https://github.com/IQSS/dataverse
 - https://github.com/bethrobson/Head-First-Design-Patterns/tree/master/src/headfirst/designpatterns/command (Java 8!)
 - http://gameprogrammingpatterns.com/command.html
 - http://www.vincehuston.org/dp/command.html
@@ -1369,22 +1511,38 @@ Current implementation requires an actual object to work on, but the database la
 - http://www.journaldev.com/1624/command-design-pattern-in-java-example-tutorial
 - https://www.youtube.com/watch?v=o8Iw75nboJY
 - http://javapapers.com/design-patterns/command-design-pattern/
-- http://iqss.github.io/javaone2014-bof5619 (sample code from this talk)
+
+???
+
+Here's a bunch of links we came across while researching the command pattern and this talk. 
+
+(For last slide)
+
+Thanks!
+
+We're part of the Data Science team at IQSS at Harvard. You can check out our new website at datascience.iq.harvard.edu.
+
+You can check out the command pattern code for Dataverse at github.com/IQSS/dataverse.
+
+Here's link to the slides for this talk, also on GitHub.
 
 ---
+
 class: slide-emph-happy middle center
 
 #Thanks
-
 
 Visit the IQSS data science team at http://datascience.iq.harvard.edu
 
 Dataverse project @ GitHub: https://github.com/IQSS/dataverse
 
+Slides and sample code from this talk: http://iqss.github.io/javaone2014-bof5619
+
 [![IQSS logo](images/iqss-logo.png)](http://www.iq.harvard.edu)
 .bottom-remark[
 Presentation created using remark.js. UML drawings done with PlantUML.
 ]
+
     </textarea>
     <script src="js/remark-0.6.5.min.js" type="text/javascript">
     </script>
