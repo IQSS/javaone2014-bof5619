@@ -211,8 +211,6 @@ The main benefit here is that the model can be viewed in many ways. There's a ni
 
 Here we see a button on the view. When users click it, the controller manipulates the model. 
 
-(In the web world, MVC has taken on a life of its own.  MVC for the web often differs significantly from the Smalltalk implementation. The Action-Domain-Responder pattern is "an attempt to refine MVC for a web-specific environment" according to https://github.com/pmjones/mvc-refinement .)
-
 ---
 
 # The Command Pattern
@@ -641,7 +639,7 @@ We can ignore them.
 
 Why would we want to ignore commands?
 
-What if the user who issues a command doesn't have permission to execute it? Sure, you can hide a button, but maybe they'll figure out the API call.
+What if the user who issues a command doesn't have permission to execute it? Sure, you can hide a button in a GUI, but maybe they'll figure out the API call.
 
 What if the command doesn't make any sense? What if the user is trying to publish something that's already been published?
 
@@ -711,7 +709,7 @@ Balancing clean design and practicality.
 
 ???
 
-Ok, let's say this one interpretation of MVC in Java EE. It's not as clean as classic MVC, but handles persistence and handles the complexities of a GUI over stateless protocol such as HTTP.
+Ok, let's say this one interpretation of MVC in Java EE. It's not as clean as classic MVC, but handles persistence and handles the complexities of a GUI over a stateless protocol such as HTTP.
 
 We've drawn the lines between the boxes, other people would probably place them differently.
 
@@ -762,8 +760,9 @@ EJB Design Patterns: Advanced Patterns, Processes, and Idioms by Floyd Marinescu
 
 "Use the Command pattern to wrap business logic in lightweight command beans that decouple the client from EJB, execute in one network call, and act as a façade for the EJB layer." (p. 19)
 
-- Session Façade + Business Delegate vs. Command
-- Command Server (invoker) as stateless session bean
+Command vs. Session Façade + Business Delegate
+
+"Applied to EJB, the Command Server class is a stateless session bean that accepts a command as a parameter and executes it locally." (p. 22)
 
 http://www.theserverside.com/news/1369776/Free-Book-EJB-Design-Patterns
 
@@ -773,9 +772,9 @@ So! Is our group the first to apply the command pattern to Java EE? Of course no
 
 In 2002 (12 years ago!) Floyd Marinescu wrote a book called "EJB Design Patterns" that said,
 
-- "Use the Command pattern to wrap business logic in lightweight command beans that decouple the client from EJB, execute in one network call, and act as a façade for the EJB layer."
+- "Use the Command pattern to wrap business logic in lightweight command beans that decouple the client from EJB, execute in one network call, and act as a facade for the EJB layer."
 
-He frames the Command pattern as an alternative to a combination of the Session Façade pattern and the Business Delegate pattern.
+He frames the Command pattern as an alternative to a combination of the Session Facade pattern and the Business Delegate pattern.
 
 He doesn't use the term "invoker". To him it's the "command server". He says,
 
@@ -851,7 +850,7 @@ Real code, comments removed.
 
 ???
 
-The next thing to notice about how we've implemented commands is that they operate on Dataverse object. For now, you can think of Dataverse objects as files and folders. These are the "receivers" of commands, the equivalent of passing in Obiwan Kenobe or the Millennium Falcon from before.
+The next thing to notice about how we've implemented commands is that they operate on Dataverse objects. For now, you can think of Dataverse objects as files and folders. These are the "receivers" of commands, the equivalent of passing in Obiwan Kenobe or the Millennium Falcon from before.
 
 Also, in our system, when you instantiate a command, you always specify a "User" object. This is the person attempting to executing the command, which may or may not succeed based on permissions.
 
@@ -924,7 +923,7 @@ In the classic command pattern, we saw how the client runs "execute" on the invo
 
 We say that you "submit" a command to our engine. The command may or may not succeed, based on the user you passed in and the objects you're trying to manipulate. 
 
-You let the engine to a lot of error checking. You catch CommandExceptions and report back to the user what the result was.
+You let the engine do a lot of error checking. You catch CommandExceptions and report back to the user what the result was.
 
 `submit` is a generic method, allowing type-safe execution of any command. If you try to assign the return value of a command to the wrong type you'll get an "incompatible types" error at compile time. The CreateDatasetCommand returns a dataset. The engine prevents you from assigning the result to a DataFile, for example.
 
@@ -1073,7 +1072,7 @@ We've still got JSF talking to a backing bean. But now the backing bean submits 
 
 ???
 
-Now, you might be asking yourself, "Where did the service beans go?"
+Of course, now you might be asking yourself, "Where did the service beans go?"
 
 ---
 
@@ -1136,7 +1135,7 @@ So where are the service beans?
 
 Let's look at the RenameDataverseCommand.
 
-Once we get past a validation check, we see "context dot dataverses dot save".
+Once we get past a validation check (which is an example of an IllegalCommandException) we see "context dot dataverses dot save".
 
 That "save" is a method on the DataverseServiceBean and we get to it through what we're calling the CommandContext.
 
@@ -1144,7 +1143,7 @@ So the service beans are still with us. But they're in charge of relatively simp
 
 The next thing to notice about the way we've implemented commands is that we annotate them with required permissions.
 
-This command requires the "undoable" edit permission.
+This command requires the UndoableEdit permission.
 
 A PermissionException is thrown if user lacks sufficient permission
 
@@ -1178,11 +1177,11 @@ public enum Permission {
 
 Let's look a little deeper at permissions.
 
-We put all of our permissions in an enum. That enum contains a description of what the permission means and it specifies which object the permission can be applied to.
+We put all of our permissions in an enum. That enum contains a description of what the permission means and it specifies which objects the permission can be applied to.
 
 How do we store permissions in the database?
 
-For performance, we store permissions in a bit field backed by a long. This kind of like Unix permissions work, how you chmod 755 or chmod 644 a file.
+For performance, we store permissions in a bit field backed by a long. This is kind of like how Unix permissions work, how you chmod a file to 755 or 644.
 
 It means we don't need expensive database joins when we're checking permissions.  Testing if a permission exists is a bitwise operation.
 
@@ -1213,7 +1212,7 @@ public class MoveDataverseCommand extends AbstractVoidCommand {
 ```
 ???
 
-We mentioned that we annotate our commands with the required permission but what if the command operates on more than one object at a time? What if we want to specify that different permissions are required on different objects that are being manipulated by the command?
+We've shown how we annotate our commands with the required permission but what if the command operates on more than one object at a time? What if we want to specify that different permissions are required on different objects that are being manipulated by the command?
 
 No problem. We use a RequiredPermissionMap to specify that you need the "DestructiveEdit" permission on this object and different permission on a different object.
 
@@ -1250,9 +1249,9 @@ public DatasetVersion execute(CommandContext ctxt) throws CommandException {
 
 What about composing commands? Calling commands from other commands. This is supported too, and here's an example.
 
-The parent command first submits the GetDraftDatasetCommand to the engine.
+The parent command first submits the GetDRAFTdatasetCommand to the engine.
 
-If we get null back, the GetPublishedDatasetCommand is submitted. 
+If we get null back, the GetPUBLISHEDdatasetCommand is submitted. 
 
 We get some nice code re-use here, calling commands from commands.
 
@@ -1318,7 +1317,7 @@ Can we remove the service beans?
 ## Can we remove all service beans?
 
 # Yes
-* Command context could give direct access to the entity manager, JMS resources and the like, so commands could use them directly.
+* Command context can give direct access to the entity manager, JMS resources and the like, so commands could use them directly.
 * There's just one problem...
 
 ???
@@ -1337,7 +1336,7 @@ But there's one problem...
 
 ## Can we remove all service beans?
 # Yes
-* Command context can give direct access to the entity manager, JMS resources and the like, so commands can use them directly.
+* Command context can give direct access to the entity manager, JMS resources and the like, so commands could use them directly.
 * There's just one problem...
 
 .center.problem[
@@ -1361,7 +1360,7 @@ Given that:
 
 ???
 
-*Should* we remove all the service beans? That's really the question.
+Not *can* but *should* we remove all the service beans? That's really the question.
 
 ---
 
@@ -1472,7 +1471,7 @@ These are the downsides we've notice so far.
 
 First, you need to write some infrastructure code. We wrote the command engine. We put in the checks for annotations on permissions.
 
-In addition, from what we can tell, using the command pattern in Java EE is not an especially mainstream solution. You may need to explain it to your developers.
+In addition, from what we can tell, using the command pattern in Java EE is not especially mainstream. You may need to explain it to your developers.
 
 ---
 
