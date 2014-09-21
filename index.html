@@ -146,7 +146,7 @@ https://github.com/IQSS/javaone2014-bof5619
 
 Here's the agenda for this talk.
 
-First off, we come from academia but we're here to talk about how we applied the command pattern to a real-world Java EE application called "Dataverse".
+First off, we come from academia but we're here to talk about how we applied the command pattern to a real-world Java EE application called "Dataverse". This is a research **tool**, not just research.
 
 We'll talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
 
@@ -850,7 +850,7 @@ Real code, comments removed.
 
 ???
 
-The next thing to notice about how we've implemented commands is that they operate on Dataverse objects. For now, you can think of Dataverse objects as files and folders. These are the "receivers" of commands, the equivalent of passing in Obiwan Kenobe or the Millennium Falcon from before.
+The next thing to notice about how we've limited the scope of the receivers - commands operate on Dataverse objects only. For now, you can think of Dataverse objects as files and folders. These are the "receivers" of commands, the equivalent of passing in Obiwan Kenobe or the Millennium Falcon from before.
 
 Also, in our system, when you instantiate a command, you always specify a "User" object. This is the person attempting to executing the command, which may or may not succeed based on permissions.
 
@@ -984,9 +984,9 @@ try {
     if (editMode == EditMode.CREATE) {
 *        cmd = new CreateDatasetCommand(dataset, session.getUser());
     } else {
-*        cmd = new UpdateDatasetCommand(dataset, session.getUser());
+        cmd = new UpdateDatasetCommand(dataset, session.getUser());
     }
-*    dataset = commandEngine.submit(cmd);
+    dataset = commandEngine.submit(cmd);
     ...
 } catch (CommandException ex) {
     FacesContext.getCurrentInstance().addMessage(...);
@@ -1181,7 +1181,7 @@ We put all of our permissions in an enum. That enum contains a description of wh
 
 How do we store permissions in the database?
 
-For performance, we store permissions in a bit field backed by a long. This is kind of like how Unix permissions work, how you chmod a file to 755 or 644.
+For performance, we store permissions in a bit field backed by a long. This is kind of like how Unix permissions work, how you chmod a file to 755 or 644. Because permissions are in an enum, each permission has a unique index number we use to map it to a bit in the field.
 
 It means we don't need expensive database joins when we're checking permissions.  Testing if a permission exists is a bitwise operation.
 
@@ -1251,7 +1251,7 @@ What about composing commands? Calling commands from other commands. This is sup
 
 The parent command first submits the GetDRAFTdatasetCommand to the engine.
 
-If we get null back, the GetPUBLISHEDdatasetCommand is submitted. 
+Note the empty catch clause for a `PermissionException`. If the issuing does not have a permission to view the draft, we try to get the published one. The null check is there in case there isn't a draft version. But, you know academia, there *always* is a draft version.
 
 We get some nice code re-use here, calling commands from commands.
 
@@ -1326,7 +1326,7 @@ The answer is yes, unless you consider the engine to be a service bean.
 
 We consider the engine part of our command pattern adaptation.
 
-At any event, we need to allow the container to inject dependencies somewhere and we call that the CommandContext.
+At any event, we need to allow the container to inject dependencies somewhere, and that somewhere must be a managed bean. We later reference these injected dependencies from the `CommandContext`.
 
 From the CommandContext we can directly access the EntityManager and JMS resources... 
 
@@ -1428,6 +1428,7 @@ class: slide-emph-happy center middle
 * Commands are POJOs:
   * Reusable outside of Java EE
   * Testable using JUnit
+      * Since we use beans, which are easier to mock than EntityManagers
 * Easy to find functionality - look at the class' name
 
 ???
@@ -1485,7 +1486,7 @@ This conflicts with, e.g. The Decorator pattern. We will use a static-dynamic co
 
 ### Permission pre-flight check
 
-Current implementation requires an actual object to work on, but the database layer allows for permission checks using the entity's id only - no real need to retrieve the object. We need to take advantage of this. Somehow.
+Current implementation requires an actual object to work on, but the database layer allows for permission checks using the entity's id only - no real need to retrieve the object. When it makes sense, we need to take advantage of this. Somehow.
 
 ???
 
@@ -1493,7 +1494,7 @@ Let's talk about future work. Where are we going with the Lean Bean pattern?
 
 First, we're not sure we like using static annotations for required permissions. We're considering a static-dynamic combination where the basic command implementation uses reflection to return the required permission. But then we'd allow subclasses to override this behavior.
 
-Second, we'd like to get away from requiring an instantiated object to check permissions. This would help with unit testing.
+Second, we'd like to get away from always requiring an instantiated object to check permissions. Consider the case of `GetDatasetCommand`. This command requires a `Dataset` object, which is retrieved from the database with all the overhead this may mean. After the retrieval, the engine might conclude that the user does not have a permission to view this dataset, and disposes of that object. So all the hard work done by JPA to construct this object is lost, and the garbage collector has more work to do. For these cases, we'd like to be able to use just the object id, not the object itself.
 
 ---
 
