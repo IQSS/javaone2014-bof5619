@@ -111,45 +111,54 @@ class: bigfont
 
 # Agenda
  
-
 1. Intro, real world challenges
-2. MVC, Java EE MVC, Classic command
-3. Command Adaptation for modern Java EE
-  * With real-world examples!
+2. MVC, MVC in Java EE, classic command
+3. Command pattern adaptations
+  * Java EE
+  * Modern programming
+  * Permission system
 4. The Lean Bean Design Pattern
 
 .regularfont[
-Slides and code:
-
+Slides:  
 https://github.com/IQSS/javaone2014-bof5619
+
+Code:  
+https://github.com/IQSS/dataverse
 ]
 
 ???
 
 Here's the agenda for this talk.
 
-First off, we come from academia but we're here to talk about how we applied the command pattern to a real-world Java EE application called "Dataverse". This is a research **tool**, not just research.
+First off, we come from academia but we're here to talk about how we applied the command pattern to a real-world Java EE application called "Dataverse". This is a research *tool*, not just research.
 
-We'll talk briefly about classic MVC, MVC in Java EE, and the classic command pattern.
+We're going to define our terms:
+
+- Model View Controller or MVC
+- MVC in Java EE
+- the classic command pattern
 
 Then, we'll present the adjustments we've made to the command pattern to adapt it to Java EE, modern programming, and a *permission system* we came up with for Dataverse.
 
 Finally, we'll generalize the lessons learned and explain why we refer to the pattern as the *Lean Bean* Design Pattern.
 
-This entire talk, including the code, has already been posted to GitHub. You can find it under github.com/IQSS and you should feel free to open issues.
+This entire talk has already been posted to GitHub. You can find it under github.com/IQSS and you should feel free to open issues.
 
 ---
 
-# Real world challenges
+# Two real world challenges
 
+.medfont[
 Dataverse 4.0 requirements
 
-* Maximal code re-use between the API and the GUI
-* Host sensitive data with granular permissions
+1. Maximal code re-use between API and GUI
+2. Host sensitive data with granular permissions
 
-.center[ <img src="images/dvn4.png" alt="">]
+.center[ <img src="images/dataverseproject_logo.jpg" width="500" alt="">]
 
 https://github.com/IQSS/dataverse
+]
 
 ???
 
@@ -159,20 +168,24 @@ First, we're trying to maximize the amount of code re-use between the web interf
 
 Second, we have a focus on *security*. Our users are interested in hosting *sensitive datasets* in our application, so we need *tight* security and *granular permissions*.
 
-In the end, we chose the command pattern (with some adjustments) to solve both of these problems (code re-use and security), but before we dive into the command pattern, let's first talk about MVC.
+In the end, we chose the command pattern (with some adjustments) to address both of these challenges (code re-use and security), but before we dive into the command pattern, let's first talk about MVC.
 
 ---
 
 # Classic MVC
 
 Goal: <strong>Separate data from its representation</strong>
-- Model: Business objects
-- View: What the users sees
-- Controller: Manipulates the model according to inputs from the view
 
 .center[
   <img src="uml/mvc.svg" width="350"/>
 ]
+
+- Model: Business objects
+- View: What the users sees
+- Controller: Manipulates the model according to inputs from the view
+
+Developed by Trygve Reenskaug at Xerox PARC in 1979. Not a GoF pattern.
+
 <!-- <img src="images/gof.png" width="300"/>
 <img src="images/hfdp.jpg" width="300"/>
  -->
@@ -205,6 +218,9 @@ Goal: <strong>Capture operations on the model as data</strong>
 .center[
   <img src="uml/mvcc.svg" width="450"/>
 ]
+
+A request is a first-class object.
+
 ???
 
 The command pattern, presented in the classic Gang of Four book, captures modifications to the model objects as data.
@@ -262,7 +278,7 @@ class: bigfont
 
 ???
 
-The Gang of Four book gives examples in C++. You click a button in a GUI to open a file.
+The Gang of Four book gives examples in C++. You click a button to trigger an OpenFileCommand.
 
 A more *Java* oriented book is Head First Design Patterns, which does cover the command pattern. 
 
@@ -276,7 +292,7 @@ The book also has you program a remote control with the command pattern. It's ve
 
 (Admiral Piett)
 
-<img src="images/in-command-now.jpg" width="600"/>
+<img src="images/in-command-now.jpg" width="700"/>
 
 ???
 
@@ -290,7 +306,7 @@ class: bigfont
 
 # Giving Commands
 
-<img src="images/look-sir-droids.jpg" width="400"/>
+<img src="images/look-sir-droids.jpg" width="600"/>
 
 1. stop people with droids
 1. check identification
@@ -324,7 +340,7 @@ public interface Command {
 
 Let's first look at a Command object. Notice that it's an *interface*. Individual commands (concrete commands) will implement this interface.
 
-Now, the command interface is very simple. It only requires that you implement a single method, which is often called `execute()`.
+Now, the command interface is very simple. It only requires that you implement a single method, which is often called "execute".
 
 That's some of the power of the dark s... er, power of the command pattern... that no matter what the command is called, the *complexity* is hidden behind a consistently named method such as "execute".
 
@@ -379,9 +395,6 @@ That's all contained in the execute() method, which again is required by the com
 
 # The Client
 
-- command bound to receiver
-- invoker is given a command to execute, and told to execute it
-
 ```java
 System.out.println("# Mos Eisley checkpoint");
 
@@ -392,6 +405,10 @@ StormTrooper stormTrooper = /* Recruit trooper here */
 stormTrooper.setCommand( checkIdCommand ); // invoker
 *stormTrooper.execute(); // Move along, move along.
 ```
+
+- ties all the object together
+- command bound to receiver
+- invoker is given a command to execute, and told to execute it
 
 ???
 
@@ -407,10 +424,8 @@ Of course, when we call `execute` on the stormtrooper, all we hear is "move alon
 
 # One Invoker, Two Commands
 
-same stormtrooper given different commands
-
 ```java
-StormTrooper stormTrooper = /* Recruit trooper here */
+StormTrooper stormTrooper = /* TX-421 */
 
 System.out.println("# Mos Eisley checkpoint");
 Suspect obiwan = new Jedi("Obiwan"); // receiver
@@ -424,6 +439,8 @@ Ship falcon = new Ship("Millenium Falcon"); // receiver
 stormTrooper.setCommand(checkShipCommand); // same invoker, new command
 stormTrooper.execute(); // No one on board.
 ```
+
+Same stormtrooper given different commands.
 
 ???
 
@@ -462,7 +479,7 @@ public class StormTrooper {
 
 ```
 
-- stateful: setCommand, another call to execute
+Stateful: setCommand, another call to execute.
 
 ???
 
@@ -502,7 +519,7 @@ Here's the Suspect class, which is the receiver in our CheckIdCommand.
 
 For most suspects, you call "getId" and they give you their identification.
 
-Jedi subclass "Suspect" and throw runtime exceptions instead. They're in a class of their own.
+Jedi subclass "Suspect" and throw runtime exceptions instead.
 
 ---
 
@@ -511,7 +528,7 @@ Jedi subclass "Suspect" and throw runtime exceptions instead. They're in a class
 ```java
 public class CheckShipCommand implements Command {
 
-    Ship ship;
+    Ship ship; // receiver
 
     public CheckShipCommand(Ship ship) {
         this.ship = ship;
@@ -554,9 +571,11 @@ class: middle center slide-emph-mid
 
 #But what's in it for us?
 .left[
+.medfont[
 * Why not call `execute()` on the command from the client code?
 * Why not put the functionality of `execute()` in a normal method instead of creating new objects?
 * _Yet another_ level of indirection? Don't we have enough of these?
+]
 ]
 
 ???
@@ -571,19 +590,18 @@ At this point, you may ask, "what's in it for us?"
 
 # Code as Data
 
-The command pattern allows us to treat code blocks as data. So we can:
+The command pattern allows us to treat a block of code (and its parameters) as data. Benefits:
 
+.medfont[
 - Reuse methods from different controllers
 - Store commands in data structures
-  - Queue commands
-  - Map keys to commands (events triggering actions)
-- Execute on a different thread
-    - Plays well with serialization
-- Execute macros, as sequence of commands
-- When commands can invoke commands - we get full recursive-ness
+- Queue commands
+- Create command macros, a sequence
+- Commands calling other commands
 - Test better
-- Log better
-- Easy extend to support undo and command history
+- Log better, show command history
+- Easy extend to support undo operations
+]
 
 We can do all this (and more!) with commands.
 
@@ -591,7 +609,7 @@ We can do all this (and more!) with commands.
 
 ???
 
-The command pattern lets us take a block of code and its parameters, an use it as a data.
+The command pattern lets us take a block of code and its parameters, an use it as data.
 
 What are the benefits of this?
 
@@ -630,10 +648,13 @@ What if the command doesn't make any sense? What if the user is trying to publis
 # Why We Chose Command
 
 For Dataverse 4.0, a Java EE 7 app which needs to support sensitive data and a full API, we wanted:
-* Maximal code re-use between the API and the UI
-* By-design, permission-based security.
 
-.center[ <img src="images/dvn4.png" alt="">]
+.medfont[
+1. Maximal code re-use between the API and the UI
+2. By-design, permission-based security.
+]
+
+.center[ <img src="images/dataverseproject_logo.jpg" width="500" alt="">]
 
 
 With some extensions and infrastructure (shown later) - we got just that.
@@ -711,7 +732,7 @@ Balancing clean design and practicality.
  Note: We show one interpretation here - there are other interpretations as well.
 ]
 
-<div style="position: absolute; top:140px; left: 230px" class="speech speech-left">Now, how do I cram <strong>Command</strong> in here?</div>
+<div style="position: absolute; top:140px; left: 230px" class="speech speech-left">Now, how do I cram commands in here?</div>
 <div style="position: absolute; top:180px; left: 230px">/</div>
 
 ???
@@ -720,11 +741,13 @@ You might be wondering how you can cram commands in here.
 
 ---
 
-class: middle center bigfont
+class: middle center
 
 <img src="images/obiwan.jpg" width="300" />
 
-# I feel a great disturbance in the source.
+.disturbancefont[
+I feel a great disturbance in the source.
+]
 
 ???
 
@@ -738,13 +761,13 @@ EJB Design Patterns: Advanced Patterns, Processes, and Idioms by Floyd Marinescu
 
 <img src="images/ejb-design-patterns.jpg" width="300" align="right"/>
 
-*4.5 stars on Amazon from 37 reviews*
-
 "Use the Command pattern to wrap business logic in lightweight command beans that decouple the client from EJB, execute in one network call, and act as a façade for the EJB layer." (p. 19)
 
 Command vs. Session Façade + Business Delegate
 
-"Applied to EJB, the Command Server class is a stateless session bean that accepts a command as a parameter and executes it locally." (p. 22)
+No invoker: "Applied to EJB, the Command Server class is a stateless session bean that accepts a command as a parameter and executes it locally." (p. 22)
+
+<img src="images/struts.gif" width="120" alt="Struts"/>
 
 http://www.theserverside.com/news/1369776/Free-Book-EJB-Design-Patterns
 
@@ -1377,7 +1400,7 @@ We tried that. Didn't work well, since the commands became too detailed.
 ## Current Status - a more balanced approach
 **Commands** deal with: Operations on model objects.
 
-**Service Beans** deal with: save, update, delete and various finds of model objects.
+**Service Beans** deal with: save, update, delete and various lookups of model objects (e.g. findById).
 
 .right[Hence, we call this:]
 
@@ -1387,9 +1410,10 @@ We're still trying to discover the pattern. For now we're calling it...
 
 ---
 
-class: slide-emph-happy center middle
+class: slide-emph-happy center middle leanbeanfont
 
 ## _the_
+
 # Lean Bean Design Pattern
 
 ???
